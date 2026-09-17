@@ -1,0 +1,12 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+# Sin CNI por defecto (kindnet) para instalar Cilium manualmente, como en el examen real.
+networking:
+  disableDefaultCNI: true
+  kubeProxyMode: "none"   # dejamos que Cilium reemplace kube-proxy (eBPF)
+  podSubnet: "10.244.0.0/16"
+  serviceSubnet: "10.96.0.0/16"
+nodes:
+  - role: control-plane
+  - role: worker
+  - role: worker

@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: toolbox
+  labels:
+    app: toolbox
+spec:
+  # hostNetwork/privileged habilitados para poder inspeccionar iptables, rutas
+  # y namespaces de red del nodo tal como pide el temario de Core Infra/CNI.
+  hostNetwork: false
+  containers:
+    - name: toolbox
+      image: ckne-toolbox:latest
+      imagePullPolicy: IfNotPresent
+      securityContext:
+        capabilities:
+          add: ["NET_ADMIN", "NET_RAW"]
+      command: ["sleep", "infinity"]
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: toolbox-hostnet
+  labels:
+    app: toolbox-hostnet
+spec:
+  # Variante con red del nodo: útil para depurar iptables/rutas/tcpdump a nivel de nodo
+  # (equivalente a lo que harías con un DaemonSet privilegiado en el examen real).
+  hostNetwork: true
+  containers:
+    - name: toolbox
+      image: ckne-toolbox:latest
+      imagePullPolicy: IfNotPresent
+      securityContext:
+        privileged: true
+      command: ["sleep", "infinity"]
