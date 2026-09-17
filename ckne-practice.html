@@ -356,6 +356,27 @@
     font-size: 0.85rem;
   }
   .complete-banner.show { display: block; }
+
+  .exam-controls {
+    display: none;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .exam-controls pre {
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    color: var(--text);
+    white-space: pre-wrap;
+  }
+  .exam-badge { font-weight: 600; }
+  body.exam-mode aside, body.exam-mode .mobile-select { display: none !important; }
+  body.exam-mode #hintBtn, body.exam-mode #solutionBtn { display: none !important; }
 </style>
 </head>
 <body>
@@ -363,6 +384,8 @@
 <header>
   <h1>CKNE Practice Console <span class="dim">· simulador de terminal para preparación CKNE</span></h1>
   <div class="header-right">
+    <span id="examBadge" class="score-pill exam-badge" style="display:none;"></span>
+    <button id="examModeBtn">Modo examen</button>
     <span id="scoreLabel" class="score-pill">0 / 0 escenarios</span>
   </div>
 </header>
@@ -385,6 +408,8 @@
     </div>
 
     <div class="complete-banner" id="completeBanner"></div>
+
+    <div class="exam-controls" id="examControls"></div>
 
     <div class="terminal">
       <div class="terminal-bar">
@@ -950,6 +975,17 @@ curl -s http://jaeger-query:16686/api/traces/8f2a1c | jq '.data[0].spans[] | {op
   }
 ];
 
+// ---------- Modo examen ----------
+const EXAM_DOMAIN_WEIGHTS = {
+  "Core Infrastructure and CNI": 15,
+  "Service Networking and DNS": 25,
+  "Advanced Traffic Management": 20,
+  "Network Security and Policy": 25,
+  "Observability": 15
+};
+const EXAM_TASK_COUNT = 8;
+const EXAM_DURATION_SECONDS = 90 * 60;
+
 // ---------- State ----------
 const STORAGE_KEY = "ckne-sim-progress-v1";
 let progress = {};
@@ -965,6 +1001,13 @@ let timerSeconds = 0;
 let timerHandle = null;
 let awaitingRepeat = false;
 
+let examMode = false;
+let examQueue = [];
+let examPos = 0;
+let examTimeLeft = 0;
+let examTimerHandle = null;
+let examResults = [];
+
 const sidebar = document.getElementById("sidebar");
 const mobileSelect = document.getElementById("mobileSelect");
 const taskCard = document.getElementById("taskCard");
@@ -975,6 +1018,9 @@ const scoreLabel = document.getElementById("scoreLabel");
 const solutionBox = document.getElementById("solutionBox");
 const solutionText = document.getElementById("solutionText");
 const completeBanner = document.getElementById("completeBanner");
+const examModeBtn = document.getElementById("examModeBtn");
+const examBadge = document.getElementById("examBadge");
+const examControls = document.getElementById("examControls");
 
 function saveProgress() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(progress)); }
@@ -1076,10 +1122,13 @@ function loadScenario(index) {
 
   solutionBox.classList.remove("open");
   completeBanner.classList.remove("show");
+  examControls.style.display = "none";
+  examControls.innerHTML = "";
   startTimer();
   buildSidebar();
   cmdInput.value = "";
   cmdInput.focus();
+  if (examMode) updateExamBadge();
 }
 
 function renderProgressRow() {
@@ -1095,12 +1144,33 @@ function renderProgressRow() {
   });
 }
 
+const COMMAND_ALIASES = {
+  po: "pods", pod: "pods",
+  deploy: "deployment", deployments: "deployment", deploys: "deployment",
+  svc: "service",
+  cm: "configmap",
+  ep: "endpoints",
+  netpol: "networkpolicy", netpols: "networkpolicy", networkpolicies: "networkpolicy"
+};
+
+function normalizeBasic(raw) {
+  return raw.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+// Variante adicional (nunca reemplaza a la básica) que tolera alias comunes
+// de kubectl ("k" por "kubectl", "po"/"svc"/"cm" por sus nombres completos)
+// sin arriesgar que un patrón existente deje de matchear.
+function normalizeExpanded(raw) {
+  let c = normalizeBasic(raw).replace(/^k(\s|$)/, "kubectl$1");
+  return c.split(" ").map(tok => COMMAND_ALIASES[tok] || tok).join(" ");
+}
+
 function tryMatch(input) {
   const s = scenarios[currentIndex];
   if (currentStep >= s.steps.length) return null;
   const step = s.steps[currentStep];
-  const clean = input.trim().toLowerCase();
-  return step.match.some(re => re.test(clean));
+  const variants = [normalizeBasic(input), normalizeExpanded(input)];
+  return step.match.some(re => variants.some(v => re.test(v)));
 }
 
 function handleUtility(raw) {
@@ -1122,7 +1192,14 @@ en lo demás, escribe comandos tipo kubectl/cilium/hubble como lo harías en un 
   return false;
 }
 
+function examBlocked() {
+  if (!examMode) return false;
+  printLine("deshabilitado durante el modo examen — así se siente la presión real.", "line-hint");
+  return true;
+}
+
 function showHint() {
+  if (examBlocked()) return;
   const s = scenarios[currentIndex];
   if (currentStep >= s.steps.length) {
     printLine("ya completaste todos los pasos de este escenario.", "line-hint");
@@ -1132,6 +1209,7 @@ function showHint() {
 }
 
 function toggleSolution(forceOpen) {
+  if (examBlocked()) return;
   const s = scenarios[currentIndex];
   const open = forceOpen || !solutionBox.classList.contains("open");
   solutionText.textContent = s.solution;
@@ -1150,6 +1228,143 @@ function markComplete() {
   completeBanner.textContent = `Escenario completo en ${m}:${sec}. Mejor tiempo guardado: ${Math.floor(best/60)}:${String(best%60).padStart(2,"0")}.`;
   completeBanner.classList.add("show");
   buildSidebar();
+
+  if (examMode) {
+    examResults.push({ id: s.id, domain: s.domain, seconds: timerSeconds });
+    showExamControls();
+  }
+}
+
+// ---------- Lógica del modo examen ----------
+function shuffleArray(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function pickExamScenarios() {
+  const byDomain = {};
+  scenarios.forEach((s, i) => { (byDomain[s.domain] = byDomain[s.domain] || []).push(i); });
+  let picks = [];
+  Object.keys(EXAM_DOMAIN_WEIGHTS).forEach(domain => {
+    const pool = shuffleArray((byDomain[domain] || []).slice());
+    const count = Math.max(1, Math.round((EXAM_DOMAIN_WEIGHTS[domain] / 100) * EXAM_TASK_COUNT));
+    picks = picks.concat(pool.slice(0, Math.min(count, pool.length)));
+  });
+  return shuffleArray(picks).slice(0, EXAM_TASK_COUNT);
+}
+
+function updateExamBadge(finished) {
+  if (finished) {
+    examBadge.textContent = "Examen finalizado";
+    examBadge.style.color = "";
+    return;
+  }
+  const m = String(Math.floor(examTimeLeft / 60)).padStart(2, "0");
+  const sec = String(examTimeLeft % 60).padStart(2, "0");
+  examBadge.textContent = `Examen: tarea ${examPos + 1}/${examQueue.length} · ${m}:${sec}`;
+  examBadge.style.color = examTimeLeft <= 300 ? "var(--danger)" : "";
+}
+
+function startExamTimer() {
+  clearInterval(examTimerHandle);
+  examTimeLeft = EXAM_DURATION_SECONDS;
+  updateExamBadge();
+  examTimerHandle = setInterval(() => {
+    examTimeLeft--;
+    updateExamBadge();
+    if (examTimeLeft <= 0) {
+      clearInterval(examTimerHandle);
+      finishExam(true);
+    }
+  }, 1000);
+}
+
+function startExamMode() {
+  const minutes = EXAM_DURATION_SECONDS / 60;
+  const ok = confirm(
+    `Modo examen: ${EXAM_TASK_COUNT} tareas aleatorias respetando el peso de cada dominio, ` +
+    `${minutes} minutos en total, sin pistas ni solución hasta terminar.\n\n¿Empezar?`
+  );
+  if (!ok) return;
+
+  examMode = true;
+  examQueue = pickExamScenarios();
+  examPos = 0;
+  examResults = [];
+  document.body.classList.add("exam-mode");
+  examModeBtn.textContent = "Salir del examen";
+  examBadge.style.display = "inline-block";
+  examControls.style.display = "none";
+  startExamTimer();
+  loadScenario(examQueue[0]);
+}
+
+function stopExamMode(silent) {
+  if (!silent && examMode) {
+    const ok = confirm("¿Salir del modo examen? Perderás el progreso de esta sesión.");
+    if (!ok) return;
+  }
+  examMode = false;
+  clearInterval(examTimerHandle);
+  examTimerHandle = null;
+  document.body.classList.remove("exam-mode");
+  examModeBtn.textContent = "Modo examen";
+  examBadge.style.display = "none";
+  examControls.style.display = "none";
+  examControls.innerHTML = "";
+  buildSidebar();
+}
+
+function showExamControls() {
+  examControls.style.display = "flex";
+  examControls.innerHTML = "";
+  const btn = document.createElement("button");
+  btn.className = "primary";
+  if (examPos + 1 < examQueue.length) {
+    btn.textContent = "Siguiente tarea →";
+    btn.addEventListener("click", () => {
+      examPos++;
+      updateExamBadge();
+      loadScenario(examQueue[examPos]);
+    });
+  } else {
+    btn.textContent = "Ver resultados del examen";
+    btn.addEventListener("click", () => finishExam(false));
+  }
+  examControls.appendChild(btn);
+}
+
+function finishExam(timeUp) {
+  clearInterval(examTimerHandle);
+  updateExamBadge(true);
+
+  const totalTasks = examQueue.length;
+  const completedCount = examResults.length;
+  const byDomain = {};
+  examQueue.forEach(idx => {
+    const d = scenarios[idx].domain;
+    byDomain[d] = byDomain[d] || { done: 0, total: 0 };
+    byDomain[d].total++;
+  });
+  examResults.forEach(r => { byDomain[r.domain].done++; });
+
+  const lines = [];
+  lines.push((timeUp ? "⏱ Se acabó el tiempo. " : "✓ Examen terminado. ") +
+    `Completaste ${completedCount}/${totalTasks} tareas.`);
+  Object.entries(byDomain).forEach(([d, v]) => lines.push(`  ${d}: ${v.done}/${v.total}`));
+
+  examControls.style.display = "flex";
+  examControls.innerHTML = "";
+  const pre = document.createElement("pre");
+  pre.textContent = lines.join("\n");
+  examControls.appendChild(pre);
+  const btn = document.createElement("button");
+  btn.textContent = "Volver a práctica libre";
+  btn.addEventListener("click", () => stopExamMode(true));
+  examControls.appendChild(btn);
 }
 
 function submitCommand() {
@@ -1189,6 +1404,9 @@ document.getElementById("hintBtn").addEventListener("click", showHint);
 document.getElementById("solutionBtn").addEventListener("click", () => toggleSolution());
 document.getElementById("resetBtn").addEventListener("click", () => loadScenario(currentIndex));
 mobileSelect.addEventListener("change", (e) => loadScenario(parseInt(e.target.value, 10)));
+examModeBtn.addEventListener("click", () => {
+  if (!examMode) startExamMode(); else stopExamMode(false);
+});
 
 buildSidebar();
 loadScenario(0);
