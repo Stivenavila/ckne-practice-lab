@@ -5,6 +5,7 @@
 ## Prerequisite (one time per cluster)
 ```bash
 helm upgrade cilium cilium/cilium --namespace kube-system --reuse-values \
+  --set standaloneDnsProxy.enabled=false \
   --set hubble.metrics.enabled="{drop,tcp,flow}" \
   --set hubble.metrics.enableOpenMetrics=true
 kubectl -n kube-system rollout restart daemonset/cilium

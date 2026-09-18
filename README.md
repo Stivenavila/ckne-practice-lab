@@ -13,7 +13,7 @@ you to practice by solving real problems, not reading theory.
 | Folder / file | What it is | When to use it |
 |---|---|---|
 | [`ckne-practice.html`](ckne-practice.html) | Browser terminal simulator, 20 scenarios with hints and solutions | To drill commands and diagnostic flow without needing a cluster (on the bus, without a powerful laptop, etc.) |
-| [`lab/`](lab/) | 19 **real** scenarios against a `kind`/`minikube` + Cilium cluster | For serious practice that resembles the exam: breaking something real and fixing it |
+| [`lab/`](lab/) | 24 **real** scenarios against a `kind`/`minikube` + Cilium cluster | For serious practice that resembles the exam: breaking something real and fixing it |
 | [`toolbox/`](toolbox/) | Network debugging Docker image (`ckne-toolbox`) | As a debug pod inside the cluster to diagnose any scenario |
 | [`console/`](console/) | Local web UI: real terminal + current scenario's instructions side by side, with a "Verify" button | If you'd rather not juggle a separate terminal and README tab — same `lab/` workflow, nicer UI. Localhost-only, no cluster changes on its own |
 
@@ -125,7 +125,7 @@ cat README.md        # read the context and objective (without peeking at the so
 ```
 
 Repeat the pattern `README.md` → `setup.sh` → diagnose → `verify.sh` with each
-of the 19 scenarios. Only open `SOLUTION.md` if you get stuck or to compare
+of the 24 scenarios. Only open `SOLUTION.md` if you get stuck or to compare
 your approach once you're done — opening it beforehand ruins the practice
 value.
 
@@ -154,6 +154,13 @@ kubectl -n obs-lab3 port-forward svc/jaeger 16686:16686 &
 # http://localhost:16686
 ```
 
+**Live console** (real terminal + scenario instructions side by side):
+```bash
+cd console
+./start.sh
+# open http://127.0.0.1:7680
+```
+
 **Terminal simulator's exam mode** — no cluster required, just open the file:
 ```bash
 xdg-open ckne-practice.html   # or just double-click it
@@ -165,11 +172,11 @@ xdg-open ckne-practice.html   # or just double-click it
 
 | Domain | Weight | Scenarios in `lab/` |
 |---|---|---|
-| Core Infrastructure and CNI | 15% | 3 |
-| Service Networking and DNS | 25% | 5 |
-| Advanced Traffic Management | 20% | 3 |
-| Network Security and Policy | 25% | 5 |
-| Observability | 15% | 3 |
+| Core Infrastructure and CNI | 15% | 4 |
+| Service Networking and DNS | 25% | 6 |
+| Advanced Traffic Management | 20% | 4 |
+| Network Security and Policy | 25% | 6 |
+| Observability | 15% | 4 |
 
 ## Cleanup
 
