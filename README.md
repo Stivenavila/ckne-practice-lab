@@ -42,27 +42,80 @@ for bin in docker kind kubectl helm cilium hubble jq; do
 done
 ```
 
-## Quickstart (from zero to your first solved scenario)
+## Step-by-step: deploy the lab and run everything
+
+### 1. Clone the repo
 
 ```bash
 git clone https://github.com/Stivenavila/ckne-practice-lab.git
 cd ckne-practice-lab
+```
 
-# 1) Create the cluster WITHOUT a CNI or kube-proxy (just like the exam: you install the CNI by hand)
+### 2. Create the cluster (pick one)
+
+The cluster is created **without a CNI or kube-proxy** on purpose — just like
+the real exam, you install the CNI by hand in the next step.
+
+**Option A — kind:**
+```bash
 cd lab/00-setup
 kind create cluster --name ckne --config kind-config.yaml
-kubectl get nodes   # all NotReady, expected
+kubectl get nodes   # all NotReady, expected — no CNI yet
+```
 
-# 2) Install Cilium replacing kube-proxy — follow lab/00-setup/README.md step by step
-#    (it has the exact --set values depending on your API server)
+**Option B — minikube:**
+```bash
+cd lab/00-setup
+minikube start -p ckne --driver=docker --nodes=3 --cpus=2 --memory=3000mb \
+  --network-plugin=cni --cni=false
+kubectl get nodes   # all NotReady, expected — no CNI yet
+```
 
-# 3) Build and load the debugging toolbox into the cluster
+### 3. Install Cilium (replaces kube-proxy)
+
+```bash
+helm repo add cilium https://helm.cilium.io/
+helm repo update
+
+helm install cilium cilium/cilium --version 1.16.5 \
+  --namespace kube-system \
+  --set kubeProxyReplacement=true \
+  --set k8sServiceHost=<control-plane-IP-or-name> \
+  --set k8sServicePort=<api-server-port> \
+  --set hubble.relay.enabled=true \
+  --set hubble.ui.enabled=true \
+  --set hubble.metrics.enabled="{drop,tcp,flow}" \
+  --set hubble.metrics.enableOpenMetrics=true
+
+cilium status --wait
+kubectl get nodes   # should now be Ready
+```
+
+Find `k8sServiceHost`/`k8sServicePort` with `kubectl cluster-info | head -1`
+(kind: usually `ckne-control-plane:6443`; minikube: the IP shown, e.g.
+`192.168.58.2:8443`).
+
+**Only if you used minikube**, kube-proxy gets installed anyway — remove it so
+Cilium does the full replacement:
+```bash
+kubectl -n kube-system delete daemonset kube-proxy
+kubectl get nodes   # confirms they stay Ready without kube-proxy
+```
+
+Full details and troubleshooting: **[`lab/00-setup/README.md`](lab/00-setup/README.md)**.
+
+### 4. Build and load the debugging toolbox
+
+```bash
 cd ../../toolbox
-./build.sh ckne
+./build.sh ckne          # auto-detects kind vs minikube, no registry needed
 kubectl apply -f debug-pod.yaml
-kubectl get pods   # toolbox and toolbox-hostnet should be Running
+kubectl get pods          # toolbox and toolbox-hostnet should be Running
+```
 
-# 4) Solve your first scenario
+### 5. Solve your first scenario
+
+```bash
 cd ../lab/02-service-networking-dns/scenario-01-broken-selector
 cat README.md        # read the context and objective (without peeking at the solution)
 ./setup.sh             # breaks something real in the cluster
@@ -71,11 +124,41 @@ cat README.md        # read the context and objective (without peeking at the so
 ```
 
 Repeat the pattern `README.md` → `setup.sh` → diagnose → `verify.sh` with each
-scenario. Only open `SOLUTION.md` if you get stuck or to compare your approach
-once you're done — opening it beforehand ruins the practice value.
+of the 19 scenarios. Only open `SOLUTION.md` if you get stuck or to compare
+your approach once you're done — opening it beforehand ruins the practice
+value.
 
-See **[`lab/README.md`](lab/README.md)** for the detailed flow, the full table of
-the 19 scenarios, and common troubleshooting.
+See **[`lab/README.md`](lab/README.md)** for the full table of scenarios,
+per-domain prerequisites (Gateway API, egress gateway, cert-manager, Hubble
+metrics), and common troubleshooting.
+
+## Running the demos
+
+A few scenarios spin up real UIs you can open in your browser — worth trying
+once your cluster is up, even outside of solving the scenario itself.
+
+**Hubble UI** — live visual map of traffic flowing through the cluster:
+```bash
+cilium hubble ui
+# opens http://localhost:12000
+```
+
+**Jaeger + HotROD tracing demo** (from `lab/05-observability/scenario-03-tracing-otel/`):
+```bash
+cd lab/05-observability/scenario-03-tracing-otel
+./setup.sh
+kubectl -n obs-lab3 port-forward svc/hotrod 8080:8080 &
+kubectl -n obs-lab3 port-forward svc/jaeger 16686:16686 &
+# open http://localhost:8080, click "Call a car", then inspect the trace at
+# http://localhost:16686
+```
+
+**Terminal simulator's exam mode** — no cluster required, just open the file:
+```bash
+xdg-open ckne-practice.html   # or just double-click it
+# click "Exam mode": 8 random tasks weighted by domain, one 90-minute timer,
+# hints and solutions disabled until you finish
+```
 
 ## Domains covered (official exam weight)
 
