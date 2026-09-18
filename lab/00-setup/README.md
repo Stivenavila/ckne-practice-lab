@@ -1,14 +1,31 @@
 # Setup del laboratorio CKNE
 
-Requisitos en tu máquina: `docker`, `kind`, `kubectl`, `helm`, `cilium` CLI.
+Requisitos en tu máquina: `docker`, `kind` **o** `minikube`, `kubectl`, `helm`,
+`cilium` CLI, `hubble` CLI.
 
-## 1. Crear el clúster (sin CNI ni kube-proxy)
+Elige una de las dos rutas para crear el clúster — el resto de la guía (Cilium,
+toolbox, escenarios) es igual para ambas.
+
+## 1a. Crear el clúster con kind (sin CNI ni kube-proxy)
 
 ```bash
 kind create cluster --name ckne --config kind-config.yaml
 kubectl get nodes
 # Todos en NotReady: es esperado, no hay CNI todavía.
 ```
+
+## 1b. Alternativa: crear el clúster con minikube
+
+```bash
+minikube start -p ckne --driver=docker --nodes=3 --cpus=2 --memory=3000mb \
+  --network-plugin=cni --cni=false
+kubectl get nodes
+# Todos en NotReady: es esperado, no hay CNI todavía.
+```
+
+> minikube instala `kube-proxy` igual aunque pidas `--cni=false` (kind no). Lo
+> quitamos manualmente en el paso 2 para que Cilium haga el reemplazo completo,
+> igual que en kind.
 
 ## 2. Instalar Cilium (reemplazando kube-proxy)
 
@@ -19,10 +36,12 @@ helm repo update
 helm install cilium cilium/cilium --version 1.16.5 \
   --namespace kube-system \
   --set kubeProxyReplacement=true \
-  --set k8sServiceHost=ckne-control-plane \
-  --set k8sServicePort=6443 \
+  --set k8sServiceHost=<IP-o-nombre-del-control-plane> \
+  --set k8sServicePort=<puerto-del-api-server> \
   --set hubble.relay.enabled=true \
   --set hubble.ui.enabled=true \
+  --set hubble.metrics.enabled="{drop,tcp,flow}" \
+  --set hubble.metrics.enableOpenMetrics=true \
   --set encryption.enabled=false
 
 cilium status --wait
@@ -30,16 +49,27 @@ kubectl get nodes   # ahora deben pasar a Ready
 ```
 
 > `k8sServiceHost`/`k8sServicePort` deben apuntar al endpoint real del API server.
-> Comprueba con: `kubectl cluster-info | head -1`
+> Comprueba con: `kubectl cluster-info | head -1` (con kind normalmente es
+> `ckne-control-plane:6443`; con minikube, la IP que muestra `kubectl cluster-info`,
+> por ejemplo `192.168.58.2:8443`).
+
+**Solo si usaste minikube** (kind no instala kube-proxy cuando pides `--cni=false`,
+así que este paso no aplica ahí):
+
+```bash
+kubectl -n kube-system delete daemonset kube-proxy
+kubectl get nodes   # confirma que se mantienen Ready sin kube-proxy
+```
 
 ## 3. Cargar la imagen toolbox en el clúster
 
-Antes de usar los escenarios, construye la imagen del toolbox (ver `../../toolbox/`) y cárgala en kind:
+Antes de usar los escenarios, construye la imagen del toolbox (ver `../../toolbox/`)
+y cárgala en tu clúster — `build.sh` detecta automáticamente si es kind o minikube:
 
 ```bash
 cd ../../toolbox
-docker build -t ckne-toolbox:latest .
-kind load docker-image ckne-toolbox:latest --name ckne
+./build.sh ckne
+kubectl apply -f debug-pod.yaml
 ```
 
 ## 4. Habilitar Hubble UI (usado en el dominio Observability)

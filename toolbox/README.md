@@ -18,15 +18,16 @@ de `cilium` y `hubble`.
 | Kubernetes / Cilium | `kubectl`, `cilium`, `hubble` |
 | Utilidades | `jq`, `openssl`, `ethtool`, `net-tools` |
 
-## Construir y cargar en tu clúster kind
+## Construir y cargar en tu clúster (kind o minikube)
 
 ```bash
 ./build.sh <nombre-del-clúster>   # por defecto: ckne
 ```
 
-Esto hace `docker build` de la imagen `ckne-toolbox:latest` y la carga directamente
-en los nodos de kind con `kind load docker-image` — no necesitas subirla a ningún
-registry, kind la sirve localmente.
+Esto hace `docker build` de la imagen `ckne-toolbox:latest` y detecta automáticamente
+si tu clúster es `kind` (usa `kind load docker-image`) o `minikube` (usa
+`minikube image load`) — no necesitas subirla a ningún registry, ambas herramientas
+la sirven localmente a los nodos.
 
 > La imagen se construye para `linux/amd64`. Si tu host es ARM (Apple Silicon,
 > Raspberry Pi), ajusta las URLs de `kubectl`/`cilium-cli`/`hubble-cli` en el
@@ -65,11 +66,19 @@ kubectl exec -it toolbox -- cilium status
 kubectl exec -it toolbox -- hubble observe --namespace mi-namespace --verdict DROPPED
 ```
 
-> Para que `cilium`/`hubble` CLI funcionen desde dentro del pod necesitan
-> conectividad hacia el API server (usan el kubeconfig del pod vía
-> ServiceAccount) y, para `hubble observe` en vivo, el relay expuesto
-> (`cilium hubble port-forward` desde tu máquina, o resolver el Service
-> `hubble-relay.kube-system` desde dentro del pod).
+> **RBAC:** por defecto, `cilium status`/`hubble observe` ejecutados *dentro* del
+> pod fallan con `forbidden` — el `ServiceAccount` `default` del namespace donde
+> corre el toolbox no tiene permiso para leer `daemonsets`/`pods`/`configmaps` de
+> `kube-system`. Para un clúster de estudio personal (no uses esto en un clúster
+> compartido) puedes darle permisos amplios al SA que usa el toolbox:
+> ```bash
+> kubectl create clusterrolebinding toolbox-view \
+>   --clusterrole=view --serviceaccount=default:default
+> ```
+> Alternativa sin tocar RBAC: corre `cilium`/`hubble` desde tu propia terminal
+> (tu kubeconfig ya tiene permisos de admin) en vez de por `kubectl exec`; usa el
+> pod solo para lo que sí necesita estar *dentro* del clúster: `curl`, `dig`,
+> `tcpdump`, `iptables`, rutas.
 
 ## Limpieza
 
