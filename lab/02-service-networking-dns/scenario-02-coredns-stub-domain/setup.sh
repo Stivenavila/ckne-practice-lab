@@ -3,8 +3,8 @@ set -euo pipefail
 NS=svc-lab2
 kubectl create namespace "$NS" --dry-run=client -o yaml | kubectl apply -f -
 
-# --- "DNS corporativo" simulado: un CoreDNS separado que sabe resolver corp.internal ---
-cat <<EOF | kubectl apply -f -
+# --- Simulated "corporate DNS": a separate CoreDNS that knows how to resolve corp.internal ---
+cat <<YAML | kubectl apply -f -
 apiVersion: v1
 kind: ConfigMap
 metadata: {name: corp-dns-config, namespace: $NS}
@@ -48,16 +48,16 @@ spec:
   ports:
   - {name: dns-udp, port: 53, protocol: UDP}
   - {name: dns-tcp, port: 53, protocol: TCP}
-EOF
+YAML
 
 kubectl -n "$NS" wait --for=condition=Ready pod -l app=corp-dns --timeout=90s
 CORP_DNS_IP=$(kubectl -n "$NS" get svc corp-dns -o jsonpath='{.spec.clusterIP}')
 
-echo "DNS corporativo simulado desplegado en $NS."
-echo "IP del ClusterIP: $CORP_DNS_IP  (apunta el forward de corp.internal aquí)"
+echo "Simulated corporate DNS deployed in $NS."
+echo "ClusterIP: $CORP_DNS_IP  (point the corp.internal forward here)"
 echo ""
-echo "Tarea: edita el ConfigMap coredns en kube-system y agrega un bloque:"
+echo "Task: edit the coredns ConfigMap in kube-system and add a block:"
 echo "  corp.internal:53 {"
 echo "      forward . $CORP_DNS_IP"
 echo "  }"
-echo "Luego: kubectl -n kube-system rollout restart deployment coredns"
+echo "Then: kubectl -n kube-system rollout restart deployment coredns"

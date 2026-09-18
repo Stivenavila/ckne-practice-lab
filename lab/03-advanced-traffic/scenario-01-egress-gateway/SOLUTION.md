@@ -1,5 +1,5 @@
 ```bash
-cat <<EOF | kubectl apply -f -
+cat <<YAML | kubectl apply -f -
 apiVersion: cilium.io/v2
 kind: CiliumEgressGatewayPolicy
 metadata:
@@ -15,9 +15,9 @@ spec:
   egressGateway:
     nodeSelector:
       matchLabels: {egress-node: "true"}
-    # egressIP: <IP-estática-si-usas-una-interfaz-secundaria-dedicada>
-    # si no defines egressIP, Cilium usa la IP primaria del nodo seleccionado.
-EOF
+    # egressIP: <static-IP-if-using-a-dedicated-secondary-interface>
+    # if you don't set egressIP, Cilium uses the selected node's primary IP.
+YAML
 
 kubectl get ciliumegressgatewaypolicy egress-lab1
 CILIUM_POD=$(kubectl -n kube-system get pods -l k8s-app=cilium -o jsonpath='{.items[0].metadata.name}')

@@ -1,5 +1,5 @@
 ```bash
-cat <<EOF | kubectl apply -f -
+cat <<YAML | kubectl apply -f -
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata: {name: checkout-route, namespace: svc-lab5}
@@ -10,7 +10,7 @@ spec:
   - backendRefs:
     - name: checkout-svc
       port: 80
-EOF
+YAML
 
 kubectl -n svc-lab5 get gateway main-gateway
 GW_IP=$(kubectl -n svc-lab5 get gateway main-gateway -o jsonpath='{.status.addresses[0].value}')

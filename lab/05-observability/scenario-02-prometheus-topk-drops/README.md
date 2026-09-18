@@ -1,8 +1,8 @@
-# Escenario: detectar el servicio con más drops usando métricas
+# Scenario: finding the service with the most drops using metrics
 
 **Namespace:** `obs-lab2`
 
-## Requisito previo (una sola vez por clúster)
+## Prerequisite (one time per cluster)
 ```bash
 helm upgrade cilium cilium/cilium --namespace kube-system --reuse-values \
   --set hubble.metrics.enabled="{drop,tcp,flow}" \
@@ -10,15 +10,17 @@ helm upgrade cilium cilium/cilium --namespace kube-system --reuse-values \
 kubectl -n kube-system rollout restart daemonset/cilium
 ```
 
-## Contexto
-"La red se siente lenta" — sin poder señalar qué servicio específico. Antes de
-investigar a ciegas, confirma con métricas cuál servicio concentra los drops.
+## Context
+"The network feels slow" — without being able to point at a specific service.
+Before investigating blindly, confirm it with metrics which service is
+concentrating the drops.
 
-## Objetivo
-Consulta directamente el endpoint de métricas de Hubble (formato Prometheus) desde
-dentro del clúster y determina qué destino tiene más `hubble_drop_total`.
+## Objective
+Query the Hubble metrics endpoint directly (Prometheus format) from inside
+the cluster and determine which destination has the most
+`hubble_drop_total`.
 
-## Empezar
+## Getting started
 ```bash
 ./setup.sh
 CILIUM_POD=$(kubectl -n kube-system get pods -l k8s-app=cilium -o jsonpath='{.items[0].metadata.name}')
@@ -27,18 +29,18 @@ kubectl run metrics-check --rm -it --image=nicolaka/netshoot --restart=Never -- 
   curl -s "$CILIUM_IP:9965/metrics" | grep hubble_drop_total
 ```
 
-## Pistas
-Repite la consulta de métricas contra **cada** agente Cilium (uno por nodo) y suma
-por `destination`, o filtra por el label `destination` que reporte el mayor
-`hubble_drop_total`. En un clúster real, esto normalmente lo automatiza Prometheus
-con una query `topk(3, sum(rate(hubble_drop_total[5m])) by (destination))`.
+## Hints
+Repeat the metrics query against **each** Cilium agent (one per node) and sum
+by `destination`, or filter for the `destination` label reporting the highest
+`hubble_drop_total`. On a real cluster, Prometheus normally automates this
+with a `topk(3, sum(rate(hubble_drop_total[5m])) by (destination))` query.
 
-## Verificar
+## Verify
 ```bash
 ./verify.sh
 ```
 
-## Limpieza
+## Cleanup
 ```bash
 kubectl delete ns obs-lab2
 ```

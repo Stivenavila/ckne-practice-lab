@@ -3,7 +3,7 @@ set -euo pipefail
 NS=sec-lab4
 kubectl create namespace "$NS" --dry-run=client -o yaml | kubectl apply -f -
 
-cat <<EOF | kubectl apply -f -
+cat <<YAML | kubectl apply -f -
 apiVersion: v1
 kind: ConfigMap
 metadata: {name: api-nginx-conf, namespace: $NS}
@@ -48,8 +48,8 @@ spec:
   template:
     metadata: {labels: {app: client}}
     spec: {containers: [{name: client, image: nicolaka/netshoot, command: ["sleep","infinity"]}]}
-EOF
+YAML
 
 kubectl -n "$NS" wait --for=condition=Ready pod -l app=api --timeout=90s
 kubectl -n "$NS" wait --for=condition=Ready pod -l app=client --timeout=90s
-echo "Namespace: $NS listo. Hoy no hay ninguna CiliumNetworkPolicy — todo el tráfico L7 pasa."
+echo "Namespace: $NS ready. There's no CiliumNetworkPolicy yet — all L7 traffic passes."

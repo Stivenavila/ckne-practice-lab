@@ -3,7 +3,7 @@ set -euo pipefail
 NS=svc-lab1
 kubectl create namespace "$NS" --dry-run=client -o yaml | kubectl apply -f -
 
-cat <<EOF | kubectl apply -f -
+cat <<YAML | kubectl apply -f -
 apiVersion: apps/v1
 kind: Deployment
 metadata: {name: web-checkout, namespace: $NS}
@@ -25,7 +25,7 @@ metadata: {name: checkout-svc, namespace: $NS}
 spec:
   selector: {app: checkout-service}
   ports: [{port: 80, targetPort: 5678}]
-EOF
+YAML
 
 kubectl -n "$NS" wait --for=condition=Ready pod -l app=checkout --timeout=90s
-echo "Namespace: $NS listo. El selector del Service no coincide con el label real."
+echo "Namespace: $NS ready. The Service's selector doesn't match the real label."

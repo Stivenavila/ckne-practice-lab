@@ -1,34 +1,34 @@
-# Escenario: auditar un bloqueo con Hubble
+# Scenario: auditing a block with Hubble
 
 **Namespace:** `obs-lab1`
 
-## Contexto
-`web-orders` reporta fallas intermitentes llamando a `inventory-svc`. Sospechan de
-una NetworkPolicy, pero nadie sabe cuál.
+## Context
+`web-orders` reports intermittent failures calling `inventory-svc`. They
+suspect a NetworkPolicy, but nobody knows which one.
 
-## Objetivo
-Usa `hubble observe` para confirmar que el tráfico está siendo bloqueado (DROPPED)
-y cuál policy es la responsable — sin mirar primero el YAML de las policies.
+## Objective
+Use `hubble observe` to confirm that traffic is being blocked (DROPPED) and
+which policy is responsible — without looking at the policies' YAML first.
 
-## Empezar
+## Getting started
 ```bash
 ./setup.sh
 kubectl -n obs-lab1 exec deploy/web-orders -- curl -s -m 3 inventory-svc
-# debe fallar
+# should fail
 ```
 
-## Pistas
+## Hints
 ```bash
 hubble observe --namespace obs-lab1 --verdict DROPPED
 hubble observe --namespace obs-lab1 --verdict DROPPED -o json | jq '.flow.Summary // .Summary'
 ```
 
-## Verificar
+## Verify
 ```bash
 ./verify.sh
 ```
 
-## Limpieza
+## Cleanup
 ```bash
 kubectl delete ns obs-lab1
 ```

@@ -1,32 +1,33 @@
-# Escenario: resolución rota hacia dominio interno
+# Scenario: broken resolution for an internal domain
 
-**Namespace:** `svc-lab2` (para el "DNS corporativo" simulado) — CoreDNS del clúster
-vive en `kube-system`, lo vas a editar directamente (es el comportamiento real).
+**Namespace:** `svc-lab2` (for the simulated "corporate DNS") — the cluster's
+CoreDNS lives in `kube-system`, you'll edit it directly (that's the real-world
+behavior).
 
-## Contexto
-Las apps no logran resolver nombres de `corp.internal`. Ese dominio debería
-reenviarse a un servidor DNS "corporativo" — en este lab, un segundo CoreDNS que
-simula esa autoridad y responde registros para `app.corp.internal`.
+## Context
+Apps can't resolve names under `corp.internal`. That domain should be
+forwarded to a "corporate" DNS server — in this lab, a second CoreDNS instance
+simulating that authority and answering records for `app.corp.internal`.
 
-## Objetivo
-Agrega un stub domain / forward condicional en el Corefile del CoreDNS del clúster
-para que `*.corp.internal` se resuelva contra el DNS corporativo simulado.
+## Objective
+Add a stub domain / conditional forward in the cluster CoreDNS's Corefile so
+that `*.corp.internal` resolves against the simulated corporate DNS.
 
-## Empezar
+## Getting started
 ```bash
 ./setup.sh
 kubectl run dnstest --rm -it --image=nicolaka/netshoot --restart=Never -- \
   dig app.corp.internal
-# Debe fallar (NXDOMAIN / timeout)
+# Should fail (NXDOMAIN / timeout)
 ```
 
-## Verificar
+## Verify
 ```bash
 ./verify.sh
 ```
 
-## Limpieza
+## Cleanup
 ```bash
 kubectl delete ns svc-lab2
-kubectl -n kube-system get cm coredns -o yaml   # revierte manualmente el Corefile si quieres dejarlo limpio
+kubectl -n kube-system get cm coredns -o yaml   # manually revert the Corefile if you want to leave it clean
 ```

@@ -3,7 +3,7 @@ set -euo pipefail
 NS=traffic-lab3
 kubectl create namespace "$NS" --dry-run=client -o yaml | kubectl apply -f -
 
-cat <<EOF | kubectl apply -f -
+cat <<YAML | kubectl apply -f -
 apiVersion: apps/v1
 kind: Deployment
 metadata: {name: orders, namespace: $NS}
@@ -45,8 +45,8 @@ spec:
   gatewayClassName: cilium
   listeners:
   - {name: http, protocol: HTTP, port: 80}
-EOF
+YAML
 
 kubectl -n "$NS" wait --for=condition=Ready pod -l app=orders --timeout=90s
 kubectl -n "$NS" wait --for=condition=Ready pod -l app=inventory --timeout=90s
-echo "Namespace: $NS listo. Falta el HTTPRoute con las dos reglas por path."
+echo "Namespace: $NS ready. Missing the HTTPRoute with both path-based rules."

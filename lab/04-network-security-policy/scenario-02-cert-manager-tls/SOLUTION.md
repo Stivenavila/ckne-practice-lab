@@ -1,15 +1,15 @@
 ```bash
 NS=sec-lab2
 
-cat <<EOF | kubectl apply -f -
+cat <<YAML | kubectl apply -f -
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata: {name: selfsigned-issuer}
 spec:
   selfSigned: {}
-EOF
+YAML
 
-cat <<EOF | kubectl apply -f -
+cat <<YAML | kubectl apply -f -
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata: {name: checkout-tls, namespace: $NS}
@@ -17,7 +17,7 @@ spec:
   secretName: checkout-tls-secret
   dnsNames: [checkout.lab.local]
   issuerRef: {name: selfsigned-issuer, kind: ClusterIssuer}
-EOF
+YAML
 
 kubectl -n $NS get certificate checkout-tls
 

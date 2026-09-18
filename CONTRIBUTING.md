@@ -1,48 +1,49 @@
-# Convención de ramas y contribución
+# Branching and contribution convention
 
-Este repo sigue **GitHub Flow**: un modelo simple pensado para iterar rápido sin
-ceremonia de releases.
+This repo follows **GitHub Flow**: a simple model built for fast iteration
+without release ceremony.
 
-## Reglas
+## Rules
 
-1. `main` siempre debe quedar en estado desplegable/funcional. No se pushea
-   directo ahí salvo fixes triviales de documentación.
-2. Todo cambio nuevo va en una rama corta, nombrada según el tipo de cambio:
-   - `feature/<nombre-corto>` — funcionalidad nueva
-   - `fix/<nombre-corto>` — corrección de bug
-   - `chore/<nombre-corto>` — mantenimiento, dependencias, configuración
-   - `docs/<nombre-corto>` — solo documentación
-3. Abre un Pull Request hacia `main` cuando la rama esté lista. Describe qué
-   cambia y por qué (el diff ya muestra el qué).
-4. Mergea con **squash merge** para mantener el historial de `main` limpio
-   (un commit por PR, sin commits intermedios de "wip" o "fix typo").
-5. Borra la rama después de mergear (`gh pr merge --delete-branch`).
+1. `main` should always be in a deployable/working state. Don't push directly to
+   it except for trivial documentation fixes.
+2. Every new change goes into a short-lived branch, named after the type of
+   change:
+   - `feature/<short-name>` — new functionality
+   - `fix/<short-name>` — bug fix
+   - `chore/<short-name>` — maintenance, dependencies, configuration
+   - `docs/<short-name>` — documentation only
+3. Open a Pull Request into `main` once the branch is ready. Describe what
+   changes and why (the diff already shows the what).
+4. Merge with **squash merge** to keep `main`'s history clean (one commit per
+   PR, no intermediate "wip" or "fix typo" commits).
+5. Delete the branch after merging (`gh pr merge --delete-branch`).
 
-## Ejemplo de flujo
+## Example flow
 
 ```bash
 git checkout main
 git pull
-git checkout -b feature/nombre-de-la-tarea
+git checkout -b feature/task-name
 
-# ... trabaja y commitea ...
+# ... work and commit ...
 
-git push -u origin feature/nombre-de-la-tarea
+git push -u origin feature/task-name
 gh pr create --fill
 
-# tras revisar y mergear:
+# after review and merge:
 git checkout main
 git pull
-git branch -d feature/nombre-de-la-tarea
+git branch -d feature/task-name
 ```
 
-## Mensajes de commit
+## Commit messages
 
-Formato libre pero descriptivo, en español, enfocado en el **por qué** del cambio
-más que en el qué — eso ya lo muestra el diff.
+Free-form but descriptive, focused on the **why** of the change rather than the
+what — the diff already shows the what.
 
-## Ramas largas o compartidas
+## Long-lived or shared branches
 
-Si una rama va a vivir más de unos días o la va a tocar más de una persona, avisa
-en el PR temprano (draft PR) en vez de acumular commits en silencio — evita
-conflictos grandes al final.
+If a branch is going to live for more than a few days or more than one person
+is going to touch it, flag it early in the PR (draft PR) instead of quietly
+piling up commits — it avoids large conflicts at the end.

@@ -3,15 +3,15 @@ set -euo pipefail
 BLOCKED=$(kubectl -n other-ns exec deploy/attacker -- curl -s -m 3 payments-svc.payments 2>&1 || true)
 ALLOWED=$(kubectl -n api-gateway exec deploy/gateway-client -- curl -s -m 3 payments-svc.payments 2>&1 || true)
 
-echo "Desde other-ns: $BLOCKED"
-echo "Desde api-gateway: $ALLOWED"
+echo "From other-ns: $BLOCKED"
+echo "From api-gateway: $ALLOWED"
 
 if echo "$BLOCKED" | grep -qi "payments-ok"; then
-  echo "FALLA: other-ns todavía puede llegar a payments (debería estar bloqueado)."
+  echo "FAIL: other-ns can still reach payments (should be blocked)."
   exit 1
 fi
 if ! echo "$ALLOWED" | grep -qi "payments-ok"; then
-  echo "FALLA: api-gateway no puede llegar a payments (debería estar permitido)."
+  echo "FAIL: api-gateway can't reach payments (should be allowed)."
   exit 1
 fi
-echo "OK: bloqueado desde other-ns, permitido desde api-gateway."
+echo "OK: blocked from other-ns, allowed from api-gateway."

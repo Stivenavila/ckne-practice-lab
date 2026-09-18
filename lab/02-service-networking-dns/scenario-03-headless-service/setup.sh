@@ -3,12 +3,12 @@ set -euo pipefail
 NS=svc-lab3
 kubectl create namespace "$NS" --dry-run=client -o yaml | kubectl apply -f -
 
-cat <<EOF | kubectl apply -f -
+cat <<YAML | kubectl apply -f -
 apiVersion: v1
 kind: Service
 metadata: {name: db, namespace: $NS}
 spec:
-  # BUG: debería ser headless (clusterIP: None) para direccionar cada pod por DNS.
+  # BUG: should be headless (clusterIP: None) to address each pod via DNS.
   selector: {app: db}
   ports: [{port: 5432}]
 ---
@@ -26,7 +26,7 @@ spec:
       - name: db
         image: busybox
         command: ["sleep", "infinity"]
-EOF
+YAML
 
 kubectl -n "$NS" wait --for=condition=Ready pod -l app=db --timeout=90s
-echo "Namespace: $NS listo. El Service 'db' tiene ClusterIP en vez de ser headless."
+echo "Namespace: $NS ready. The 'db' Service has a ClusterIP instead of being headless."

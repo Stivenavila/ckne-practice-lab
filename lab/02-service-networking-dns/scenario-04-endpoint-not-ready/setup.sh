@@ -3,7 +3,7 @@ set -euo pipefail
 NS=svc-lab4
 kubectl create namespace "$NS" --dry-run=client -o yaml | kubectl apply -f -
 
-cat <<EOF | kubectl apply -f -
+cat <<YAML | kubectl apply -f -
 apiVersion: apps/v1
 kind: Deployment
 metadata: {name: orders, namespace: $NS}
@@ -19,7 +19,7 @@ spec:
         args: ["-text=orders-ok", "-listen=:5678"]
         ports: [{containerPort: 5678}]
         readinessProbe:
-          httpGet: {path: /healthz, port: 5678}   # BUG: http-echo no sirve /healthz -> 404 siempre
+          httpGet: {path: /healthz, port: 5678}   # BUG: http-echo doesn't serve /healthz -> always 404
           initialDelaySeconds: 2
           periodSeconds: 5
 ---
@@ -29,6 +29,6 @@ metadata: {name: orders-svc, namespace: $NS}
 spec:
   selector: {app: orders}
   ports: [{port: 80, targetPort: 5678}]
-EOF
+YAML
 
-echo "Namespace: $NS listo. Espera ~20s y observa que ningún pod queda 'ready'."
+echo "Namespace: $NS ready. Wait ~20s and notice no pod ever becomes 'ready'."

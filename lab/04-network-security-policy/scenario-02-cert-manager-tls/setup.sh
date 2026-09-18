@@ -3,7 +3,7 @@ set -euo pipefail
 NS=sec-lab2
 kubectl create namespace "$NS" --dry-run=client -o yaml | kubectl apply -f -
 
-cat <<EOF | kubectl apply -f -
+cat <<YAML | kubectl apply -f -
 apiVersion: apps/v1
 kind: Deployment
 metadata: {name: checkout, namespace: $NS}
@@ -28,7 +28,7 @@ spec:
   gatewayClassName: cilium
   listeners:
   - {name: http, protocol: HTTP, port: 80}
-EOF
+YAML
 
 kubectl -n "$NS" wait --for=condition=Ready pod -l app=checkout --timeout=90s
-echo "Namespace: $NS listo. Falta: ClusterIssuer + Certificate + listener HTTPS en el Gateway."
+echo "Namespace: $NS ready. Missing: ClusterIssuer + Certificate + HTTPS listener on the Gateway."

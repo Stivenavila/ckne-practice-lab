@@ -1,34 +1,34 @@
-# Escenario: ruta faltante entre nodos
+# Scenario: missing route between nodes
 
 **Namespace:** `net-lab1`
 
-## Contexto
-Dos pods (`web-a` en un worker y `web-b` en otro) fueron desplegados. Un compañero
-estaba depurando manualmente la tabla de rutas del nodo `ckne-worker2` y dejó una
-ruta eliminada por error hacia la subred de pods del otro worker.
+## Context
+Two pods (`web-a` on one worker, `web-b` on another) were deployed. A
+coworker was manually debugging the routing table on node `ckne-worker2` and
+accidentally deleted a route to the other worker's pod subnet.
 
-## Objetivo
-Diagnostica por qué `web-a` no puede alcanzar por ping/curl a `web-b` cruzando nodos,
-y restaura la conectividad **sin recrear el clúster ni reinstalar Cilium**.
+## Objective
+Diagnose why `web-a` can't ping/curl `web-b` across nodes, and restore
+connectivity **without recreating the cluster or reinstalling Cilium**.
 
-## Cómo empezar
+## Getting started
 
 ```bash
 ./setup.sh
 kubectl -n net-lab1 get pods -o wide
-kubectl -n net-lab1 exec deploy/web-a -- ping -c 2 <IP-de-web-b>
+kubectl -n net-lab1 exec deploy/web-a -- ping -c 2 <web-b-IP>
 ```
 
-Herramientas útiles: `ip route`, `tcpdump`, `docker exec <nodo> ...` (los nodos de
-kind son contenedores docker, puedes entrar a su namespace de red directamente).
+Useful tools: `ip route`, `tcpdump`, `docker exec <node> ...` (kind nodes are
+docker containers, you can enter their network namespace directly).
 
-## Verificar que quedó resuelto
+## Verify it's resolved
 
 ```bash
 ./verify.sh
 ```
 
-## Limpieza
+## Cleanup
 
 ```bash
 kubectl delete ns net-lab1

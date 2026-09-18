@@ -1,35 +1,35 @@
-# Escenario: IP de salida estática con Cilium Egress Gateway
+# Scenario: static egress IP with Cilium Egress Gateway
 
 **Namespace:** `traffic-lab1`
 
-## Requisito previo (una sola vez por clúster)
+## Prerequisite (one time per cluster)
 ```bash
 helm upgrade cilium cilium/cilium --namespace kube-system --reuse-values \
   --set egressGateway.enabled=true
 kubectl -n kube-system rollout restart daemonset/cilium
 ```
 
-## Contexto
-Un proveedor externo exige whitelisting por IP fija para todo el tráfico saliente
-del namespace `traffic-lab1`.
+## Context
+An external provider requires IP whitelisting for all outbound traffic from
+the `traffic-lab1` namespace.
 
-## Objetivo
-Configura una `CiliumEgressGatewayPolicy` que fuerce ese tráfico a salir por un nodo
-específico, y confirma con una petición real que la IP de origen observada cambia a
-la IP de ese nodo.
+## Objective
+Configure a `CiliumEgressGatewayPolicy` that forces that traffic out through a
+specific node, and confirm with a real request that the observed source IP
+changes to that node's IP.
 
-## Empezar
+## Getting started
 ```bash
 ./setup.sh
 kubectl -n traffic-lab1 exec deploy/client -- curl -s ifconfig.me
 ```
 
-## Verificar
+## Verify
 ```bash
 ./verify.sh
 ```
 
-## Limpieza
+## Cleanup
 ```bash
 kubectl delete ns traffic-lab1
 kubectl delete ciliumegressgatewaypolicy egress-lab1 --ignore-not-found

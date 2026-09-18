@@ -3,7 +3,7 @@ set -euo pipefail
 NS=traffic-lab3
 GW_IP=$(kubectl -n "$NS" get gateway main-gateway -o jsonpath='{.status.addresses[0].value}' 2>/dev/null || true)
 if [ -z "$GW_IP" ]; then
-  echo "El Gateway aún no tiene IP asignada."
+  echo "The Gateway still has no IP assigned."
   exit 1
 fi
 
@@ -14,8 +14,8 @@ echo "/orders -> $R1"
 echo "/inventory -> $R2"
 
 if echo "$R1" | grep -q orders-backend && echo "$R2" | grep -q inventory-backend; then
-  echo "OK: ambos paths enrutan al backend correcto."
+  echo "OK: both paths route to the correct backend."
 else
-  echo "El enrutamiento por path todavía no funciona como se espera."
+  echo "Path-based routing still isn't working as expected."
   exit 1
 fi

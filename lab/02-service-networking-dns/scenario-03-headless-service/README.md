@@ -1,29 +1,29 @@
-# Escenario: headless Service que no expone registros por pod
+# Scenario: headless Service that doesn't expose per-pod records
 
 **Namespace:** `svc-lab3`
 
-## Contexto
-Un StatefulSet de 3 réplicas necesita que cada pod sea direccionable individualmente
-por DNS (`pod-0.svc...`, `pod-1.svc...`), pero el Service actual está devolviendo un
-único registro A tipo round-robin en vez de un registro por pod.
+## Context
+A 3-replica StatefulSet needs each pod to be individually addressable via DNS
+(`pod-0.svc...`, `pod-1.svc...`), but the current Service is returning a
+single round-robin A record instead of one record per pod.
 
-## Objetivo
-Corrige el Service para que sea realmente *headless* (`clusterIP: None`) y confirma
-que DNS resuelve un registro A por cada pod del StatefulSet.
+## Objective
+Fix the Service so it's actually *headless* (`clusterIP: None`) and confirm
+that DNS resolves one A record per StatefulSet pod.
 
-## Empezar
+## Getting started
 ```bash
 ./setup.sh
 kubectl run dnstest --rm -it --image=nicolaka/netshoot --restart=Never -- \
   dig +short db.svc-lab3.svc.cluster.local
 ```
 
-## Verificar
+## Verify
 ```bash
 ./verify.sh
 ```
 
-## Limpieza
+## Cleanup
 ```bash
 kubectl delete ns svc-lab3
 ```

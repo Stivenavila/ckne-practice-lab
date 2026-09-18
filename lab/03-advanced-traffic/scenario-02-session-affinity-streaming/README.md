@@ -1,17 +1,17 @@
-# Escenario: conexiones que rotan de pod en un servicio "streaming"
+# Scenario: connections rotating between pods on a "streaming" service
 
 **Namespace:** `traffic-lab2`
 
-## Contexto
-`llm-inference` responde con el nombre del pod que atendió la petición. El equipo
-reporta que llamadas sucesivas de un mismo cliente terminan en pods distintos,
-rompiendo sesiones largas (streaming).
+## Context
+`llm-inference` responds with the name of the pod that handled the request.
+The team reports that consecutive calls from the same client keep landing on
+different pods, breaking long-lived (streaming) sessions.
 
-## Objetivo
-Confirma el comportamiento por defecto (round robin entre pods) y corrige el Service
-para que las peticiones de un mismo cliente se mantengan pegadas al mismo pod.
+## Objective
+Confirm the default behavior (round robin across pods) and fix the Service so
+requests from the same client stay pinned to the same pod.
 
-## Empezar
+## Getting started
 ```bash
 ./setup.sh
 for i in 1 2 3 4; do
@@ -19,12 +19,12 @@ for i in 1 2 3 4; do
 done
 ```
 
-## Verificar
+## Verify
 ```bash
 ./verify.sh
 ```
 
-## Limpieza
+## Cleanup
 ```bash
 kubectl delete ns traffic-lab2
 ```

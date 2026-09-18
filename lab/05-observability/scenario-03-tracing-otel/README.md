@@ -1,35 +1,35 @@
-# Escenario: tracing end-to-end de una petición lenta
+# Scenario: end-to-end tracing of a slow request
 
 **Namespace:** `obs-lab3`
 
-## Contexto
-Usamos el demo oficial de Jaeger "HotROD" (una app de pedir un taxi con 4 servicios
-internos: frontend → driver → customer → route), que emite trazas reales
-multi-servicio. Uno de sus saltos internos es intencionalmente lento — igual que en
-el escenario del examen ("¿en qué salto de red se concentra la latencia?").
+## Context
+We use Jaeger's official "HotROD" demo (a ride-hailing app with 4 internal
+services: frontend → driver → customer → route), which emits real
+multi-service traces. One of its internal hops is intentionally slow — just
+like the exam's scenario ("which network hop is concentrating the latency?").
 
-## Objetivo
-1. Genera una petición real contra la app.
-2. Encuentra el trace-id de esa petición.
-3. En la UI de Jaeger, identifica qué span concentra la mayor parte de la latencia
-   total.
+## Objective
+1. Generate a real request against the app.
+2. Find that request's trace-id.
+3. In the Jaeger UI, identify which span is responsible for most of the total
+   latency.
 
-## Empezar
+## Getting started
 ```bash
 ./setup.sh
 kubectl -n obs-lab3 port-forward svc/hotrod 8080:8080 &
 kubectl -n obs-lab3 port-forward svc/jaeger 16686:16686 &
 ```
 
-Abre http://localhost:8080, pide un taxi (botón "Call a car"), y luego busca la
-traza en http://localhost:16686.
+Open http://localhost:8080, request a ride ("Call a car" button), then look
+up the trace at http://localhost:16686.
 
-## Verificar
+## Verify
 ```bash
 ./verify.sh
 ```
 
-## Limpieza
+## Cleanup
 ```bash
 kubectl delete ns obs-lab3
 ```

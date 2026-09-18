@@ -3,7 +3,7 @@ set -euo pipefail
 NS=traffic-lab2
 kubectl create namespace "$NS" --dry-run=client -o yaml | kubectl apply -f -
 
-cat <<EOF | kubectl apply -f -
+cat <<YAML | kubectl apply -f -
 apiVersion: apps/v1
 kind: Deployment
 metadata: {name: llm-inference, namespace: $NS}
@@ -25,7 +25,7 @@ apiVersion: v1
 kind: Service
 metadata: {name: llm-inference, namespace: $NS}
 spec:
-  sessionAffinity: None   # BUG: cada request puede caer en un pod distinto
+  sessionAffinity: None   # BUG: each request can land on a different pod
   selector: {app: llm-inference}
   ports: [{port: 80, targetPort: 5678}]
 ---
@@ -42,8 +42,8 @@ spec:
       - name: client
         image: nicolaka/netshoot
         command: ["sleep", "infinity"]
-EOF
+YAML
 
 kubectl -n "$NS" wait --for=condition=Ready pod -l app=llm-inference --timeout=90s
 kubectl -n "$NS" wait --for=condition=Ready pod -l app=client --timeout=90s
-echo "Namespace: $NS listo. Prueba con varios curl seguidos: verás nombres de pod distintos."
+echo "Namespace: $NS ready. Try several curls in a row: you'll see different pod names."
