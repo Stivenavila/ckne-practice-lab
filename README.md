@@ -15,6 +15,7 @@ you to practice by solving real problems, not reading theory.
 | [`ckne-practice.html`](ckne-practice.html) | Browser terminal simulator, 20 scenarios with hints and solutions | To drill commands and diagnostic flow without needing a cluster (on the bus, without a powerful laptop, etc.) |
 | [`lab/`](lab/) | 19 **real** scenarios against a `kind`/`minikube` + Cilium cluster | For serious practice that resembles the exam: breaking something real and fixing it |
 | [`toolbox/`](toolbox/) | Network debugging Docker image (`ckne-toolbox`) | As a debug pod inside the cluster to diagnose any scenario |
+| [`console/`](console/) | Local web UI: real terminal + current scenario's instructions side by side, with a "Verify" button | If you'd rather not juggle a separate terminal and README tab — same `lab/` workflow, nicer UI. Localhost-only, no cluster changes on its own |
 
 Start with the simulator if you want a quick syntax refresher, and use `lab/` for
 serious practice — the simulator doesn't replace running commands against a real
