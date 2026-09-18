@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CKNE Live Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b1220; --panel: #0f1a2e; --panel-raised: #13213a; --border: #22304a;
+    --text: #dbe4f3; --text-dim: #7d8bab; --accent: #4fd1c5;
+    --accent-soft: rgba(79, 209, 197, 0.14); --ok: #4ade80; --danger: #f87171;
+    --sans: 'Inter', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body {
+    background: var(--bg); color: var(--text); font-family: var(--sans);
+    display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+  }
+  header {
+    padding: 10px 18px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  }
+  header h1 { font-size: 0.95rem; margin: 0; font-weight: 600; }
+  header select {
+    background: var(--panel); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; padding: 5px 8px; font-family: var(--sans); font-size: 0.82rem;
+  }
+  .badge {
+    font-family: var(--mono); font-size: 0.72rem; background: var(--accent-soft);
+    color: var(--accent); padding: 3px 8px; border-radius: 5px;
+  }
+  .warn-badge {
+    font-family: var(--mono); font-size: 0.72rem; background: rgba(248,113,113,0.12);
+    color: var(--danger); padding: 3px 8px; border-radius: 5px; margin-left: auto;
+  }
+  .layout { display: flex; flex: 1; min-height: 0; }
+  .left { width: 420px; min-width: 320px; max-width: 45vw; overflow-y: auto; padding: 18px; border-right: 1px solid var(--border); }
+  .right { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .right iframe { flex: 1; border: none; background: #000; }
+  h2 { font-size: 1.1rem; margin: 0 0 10px; }
+  .section-label {
+    font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--text-dim); margin: 16px 0 6px;
+  }
+  .section-label:first-of-type { margin-top: 0; }
+  .body-text { font-size: 0.88rem; line-height: 1.55; white-space: pre-wrap; }
+  .dod-list { list-style: none; padding: 0; margin: 0; font-size: 0.86rem; line-height: 1.7; }
+  .dod-list li::before { content: "☐ "; color: var(--accent); }
+  .toolbar { display: flex; gap: 8px; padding: 10px 18px; border-top: 1px solid var(--border); align-items: center; flex-wrap: wrap; }
+  button {
+    font-family: var(--sans); font-size: 0.82rem; padding: 7px 13px; border-radius: 7px;
+    border: 1px solid var(--border); background: var(--panel); color: var(--text); cursor: pointer;
+  }
+  button:hover { border-color: var(--accent); color: var(--accent); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #06201d; font-weight: 600; }
+  button:disabled { opacity: 0.5; cursor: default; }
+  #resultBox {
+    font-family: var(--mono); font-size: 0.78rem; white-space: pre-wrap;
+    background: #060b16; border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 12px; margin-top: 10px; max-height: 160px; overflow-y: auto; display: none;
+  }
+  #resultBox.ok { border-color: var(--ok); }
+  #resultBox.fail { border-color: var(--danger); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>CKNE Live Console</h1>
+  <select id="scenarioSelect"></select>
+  <span class="badge" id="domainBadge"></span>
+  <span class="warn-badge">localhost only — never expose this port</span>
+</header>
+
+<div class="layout">
+  <div class="left">
+    <h2 id="scenarioTitle">Loading…</h2>
+
+    <div class="section-label">Context</div>
+    <div class="body-text" id="contextText"></div>
+
+    <div class="section-label">Objective</div>
+    <div class="body-text" id="objectiveText"></div>
+
+    <div class="section-label">Definition of done</div>
+    <ul class="dod-list" id="dodList"></ul>
+  </div>
+
+  <div class="right">
+    <iframe id="termFrame" src="about:blank"></iframe>
+  </div>
+</div>
+
+<div class="toolbar">
+  <button id="setupBtn">Run setup.sh</button>
+  <button id="verifyBtn" class="primary">Verify</button>
+  <span id="statusLabel" style="font-family: var(--mono); font-size: 0.78rem; color: var(--text-dim);"></span>
+</div>
+<div id="resultBox"></div>
+
+<script>
+const TTYD_PORT = 7681; // started separately by start.sh, alongside this server
+const scenarioSelect = document.getElementById("scenarioSelect");
+const domainBadge = document.getElementById("domainBadge");
+const scenarioTitle = document.getElementById("scenarioTitle");
+const contextText = document.getElementById("contextText");
+const objectiveText = document.getElementById("objectiveText");
+const dodList = document.getElementById("dodList");
+const termFrame = document.getElementById("termFrame");
+const resultBox = document.getElementById("resultBox");
+const statusLabel = document.getElementById("statusLabel");
+
+let scenarios = [];
+
+function renderScenario(s) {
+  scenarioTitle.textContent = s.title;
+  domainBadge.textContent = s.domain;
+  contextText.textContent = s.context;
+  objectiveText.textContent = s.objective;
+  dodList.innerHTML = "";
+  s.definitionOfDone.split("\n").forEach(line => {
+    const clean = line.replace(/^-\s*\[.\]\s*/, "").trim();
+    if (!clean) return;
+    const li = document.createElement("li");
+    li.textContent = clean;
+    dodList.appendChild(li);
+  });
+  resultBox.style.display = "none";
+  document.getElementById("setupBtn").disabled = !s.hasSetup;
+  document.getElementById("verifyBtn").disabled = !s.hasVerify;
+}
+
+async function loadScenarios() {
+  const res = await fetch("/api/scenarios");
+  scenarios = await res.json();
+  scenarioSelect.innerHTML = "";
+  let currentDomain = "";
+  scenarios.forEach((s, i) => {
+    if (s.domain !== currentDomain) {
+      currentDomain = s.domain;
+      const group = document.createElement("optgroup");
+      group.label = s.domain;
+      group.dataset.start = i;
+      scenarioSelect.appendChild(group);
+    }
+    const opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = s.title;
+    scenarioSelect.lastChild.appendChild(opt);
+  });
+  if (scenarios.length) renderScenario(scenarios[0]);
+}
+
+scenarioSelect.addEventListener("change", (e) => {
+  renderScenario(scenarios[parseInt(e.target.value, 10)]);
+});
+
+async function runAction(url, btn) {
+  const s = scenarios[parseInt(scenarioSelect.value || 0, 10)];
+  btn.disabled = true;
+  statusLabel.textContent = "running…";
+  resultBox.style.display = "none";
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: s.id }),
+    });
+    const data = await res.json();
+    resultBox.textContent = data.output || data.error || "(no output)";
+    resultBox.className = data.ok ? "ok" : "fail";
+    resultBox.style.display = "block";
+    statusLabel.textContent = data.ok ? "✓ done" : "did not pass";
+  } catch (err) {
+    resultBox.textContent = String(err);
+    resultBox.className = "fail";
+    resultBox.style.display = "block";
+    statusLabel.textContent = "error";
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+document.getElementById("setupBtn").addEventListener("click", (e) => runAction("/api/setup", e.target));
+document.getElementById("verifyBtn").addEventListener("click", (e) => runAction("/api/verify", e.target));
+
+termFrame.src = `http://${location.hostname}:${TTYD_PORT}/`;
+
+loadScenarios();
+</script>
+</body>
+</html>
