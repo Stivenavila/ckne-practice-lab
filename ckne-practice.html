@@ -375,8 +375,11 @@
     white-space: pre-wrap;
   }
   .exam-badge { font-weight: 600; }
+  body.exam-mode .layout { grid-template-columns: 1fr; }
   body.exam-mode aside, body.exam-mode .mobile-select { display: none !important; }
   body.exam-mode #hintBtn, body.exam-mode #solutionBtn { display: none !important; }
+  body.exam-mode #scoreLabel { display: none; }
+  body.exam-mode .complete-banner { display: none !important; }
 </style>
 </head>
 <body>
@@ -1321,6 +1324,11 @@ function stopExamMode(silent) {
 function showExamControls() {
   examControls.style.display = "flex";
   examControls.innerHTML = "";
+  const m = String(Math.floor(timerSeconds / 60)).padStart(2, "0");
+  const sec = String(timerSeconds % 60).padStart(2, "0");
+  const note = document.createElement("span");
+  note.textContent = `Task solved in ${m}:${sec}.`;
+  examControls.appendChild(note);
   const btn = document.createElement("button");
   btn.className = "primary";
   if (examPos + 1 < examQueue.length) {
