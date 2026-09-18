@@ -11,6 +11,9 @@ accidentally deleted a route to the other worker's pod subnet.
 Diagnose why `web-a` can't ping/curl `web-b` across nodes, and restore
 connectivity **without recreating the cluster or reinstalling Cilium**.
 
+## Definition of done
+- [ ] `kubectl -n net-lab1 exec deploy/web-a -- ping -c 2 <web-b-IP>` succeeds with 0% packet loss
+
 ## Getting started
 
 ```bash

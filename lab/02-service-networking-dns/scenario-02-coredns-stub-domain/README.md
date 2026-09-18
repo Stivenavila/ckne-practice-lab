@@ -13,6 +13,9 @@ simulating that authority and answering records for `app.corp.internal`.
 Add a stub domain / conditional forward in the cluster CoreDNS's Corefile so
 that `*.corp.internal` resolves against the simulated corporate DNS.
 
+## Definition of done
+- [ ] `dig +short app.corp.internal` from inside the cluster resolves to `172.20.0.99`
+
 ## Getting started
 ```bash
 ./setup.sh

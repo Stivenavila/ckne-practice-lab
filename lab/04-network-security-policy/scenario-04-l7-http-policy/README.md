@@ -11,6 +11,10 @@ blocked **at the network level** (don't rely on the app validating it).
 Create a `CiliumNetworkPolicy` with L7 HTTP rules that allows only
 `GET /public` from the client, and blocks everything else.
 
+## Definition of done
+- [ ] `GET /public` returns HTTP `200`
+- [ ] `GET /admin` returns HTTP `403`
+
 ## Getting started
 ```bash
 ./setup.sh

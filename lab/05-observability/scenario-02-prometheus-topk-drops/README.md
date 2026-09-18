@@ -20,6 +20,10 @@ Query the Hubble metrics endpoint directly (Prometheus format) from inside
 the cluster and determine which destination has the most
 `hubble_drop_total`.
 
+## Definition of done
+- [ ] You queried `hubble_drop_total` from a Cilium agent's metrics endpoint (`:9965/metrics`)
+- [ ] You identified `inventory-svc` as the destination concentrating the drops
+
 ## Getting started
 ```bash
 ./setup.sh
