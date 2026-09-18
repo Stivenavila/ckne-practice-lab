@@ -1,29 +1,29 @@
-# Escenario: política L7 — solo permitir GET /public
+# Scenario: L7 policy — only allow GET /public
 
 **Namespace:** `sec-lab4`
 
-## Contexto
-`api-svc` expone `/public` (lectura) y `/admin` (gestión). Un cliente externo solo
-debería poder hacer `GET /public`; cualquier otro método o path debe bloquearse
-**a nivel de red** (no confiar en que la app lo valide).
+## Context
+`api-svc` exposes `/public` (read) and `/admin` (management). An external
+client should only be able to `GET /public`; any other method or path must be
+blocked **at the network level** (don't rely on the app validating it).
 
-## Objetivo
-Crea una `CiliumNetworkPolicy` con reglas L7 HTTP que permita solo `GET /public`
-desde el cliente, y bloquee el resto.
+## Objective
+Create a `CiliumNetworkPolicy` with L7 HTTP rules that allows only
+`GET /public` from the client, and blocks everything else.
 
-## Empezar
+## Getting started
 ```bash
 ./setup.sh
-kubectl -n sec-lab4 exec deploy/client -- curl -s api-svc/public   # hoy pasa
-kubectl -n sec-lab4 exec deploy/client -- curl -s api-svc/admin    # hoy también pasa (no debería)
+kubectl -n sec-lab4 exec deploy/client -- curl -s api-svc/public   # currently passes
+kubectl -n sec-lab4 exec deploy/client -- curl -s api-svc/admin    # currently also passes (shouldn't)
 ```
 
-## Verificar
+## Verify
 ```bash
 ./verify.sh
 ```
 
-## Limpieza
+## Cleanup
 ```bash
 kubectl delete ns sec-lab4
 ```

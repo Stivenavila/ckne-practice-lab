@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -382,11 +382,11 @@
 <body>
 
 <header>
-  <h1>CKNE Practice Console <span class="dim">· simulador de terminal para preparación CKNE</span></h1>
+  <h1>CKNE Practice Console <span class="dim">· terminal simulator for CKNE prep</span></h1>
   <div class="header-right">
     <span id="examBadge" class="score-pill exam-badge" style="display:none;"></span>
-    <button id="examModeBtn">Modo examen</button>
-    <span id="scoreLabel" class="score-pill">0 / 0 escenarios</span>
+    <button id="examModeBtn">Exam mode</button>
+    <span id="scoreLabel" class="score-pill">0 / 0 scenarios</span>
   </div>
 </header>
 
@@ -401,9 +401,9 @@
     <div class="task-card" id="taskCard"></div>
 
     <div class="toolbar">
-      <button id="hintBtn">Pedir pista</button>
-      <button id="solutionBtn">Ver solución completa</button>
-      <button id="resetBtn">Reiniciar escenario</button>
+      <button id="hintBtn">Get hint</button>
+      <button id="solutionBtn">View full solution</button>
+      <button id="resetBtn">Reset scenario</button>
       <span class="timer" id="timerLabel">00:00</span>
     </div>
 
@@ -413,25 +413,25 @@
 
     <div class="terminal">
       <div class="terminal-bar">
-        <span id="terminalTitle">terminal — clúster simulado</span>
-        <span>escribe <code>help</code> para ver comandos de utilidad</span>
+        <span id="terminalTitle">terminal — simulated cluster</span>
+        <span>type <code>help</code> to see utility commands</span>
       </div>
       <div class="terminal-body" id="terminalBody"></div>
       <div class="terminal-input">
         <span>❯</span>
-        <input id="cmdInput" type="text" autocomplete="off" spellcheck="false" placeholder="escribe un comando y presiona Enter">
+        <input id="cmdInput" type="text" autocomplete="off" spellcheck="false" placeholder="type a command and press Enter">
       </div>
     </div>
 
     <div class="solution-box" id="solutionBox">
-      <h3>Solución completa</h3>
+      <h3>Full solution</h3>
       <pre id="solutionText"></pre>
     </div>
   </main>
 </div>
 
 <footer>
-  Simulador local de práctica — no ejecuta contra un clúster real. Diseñado para reforzar sintaxis y flujo de diagnóstico del temario de CKNE.
+  Local practice simulator — doesn't run against a real cluster. Designed to reinforce the syntax and diagnostic flow of the CKNE curriculum.
 </footer>
 
 <script>
@@ -440,25 +440,25 @@ const scenarios = [
   {
     id: "cni-routing",
     domain: "Core Infrastructure and CNI",
-    title: "Ruta faltante entre nodos",
+    title: "Missing route between nodes",
     minutes: 12,
-    context: "Un pod en node-1 no puede alcanzar a un pod en node-2. El CNI instaló las interfaces pero falta una ruta en la tabla del nodo.",
-    objective: "Diagnostica por qué falla el ping entre pods de distintos nodos y agrega la ruta que falta para restaurar la conectividad.",
+    context: "A pod on node-1 can't reach a pod on node-2. The CNI installed the interfaces but a route is missing from the node's routing table.",
+    objective: "Diagnose why ping fails between pods on different nodes and add the missing route to restore connectivity.",
     steps: [
       { match: [/kubectl get pods( -o wide)?/], out:
 `NAME         READY   STATUS    NODE     IP
 web-a        1/1     Running   node-1   10.244.0.14
-web-b        1/1     Running   node-2   10.244.1.9`, hint: "Empieza por ver en qué nodo está cada pod y su IP." },
+web-b        1/1     Running   node-2   10.244.1.9`, hint: "Start by checking which node each pod is on and its IP." },
       { match: [/kubectl exec .*(--)?\s*ip route/, /ip route/], out:
 `default via 10.244.0.1 dev eth0
 10.244.0.0/24 dev eth0 proto kernel scope link
-# nota: no hay ruta hacia 10.244.1.0/24`, hint: "Revisa la tabla de rutas del pod o nodo origen con 'ip route'." },
+# note: no route to 10.244.1.0/24`, hint: "Check the source pod/node's routing table with 'ip route'." },
       { match: [/tcpdump/], out:
 `listening on eth0
-0 packets captured — no responses observed`, hint: "Usa tcpdump para confirmar que los paquetes salen pero no hay respuesta." },
-      { match: [/ip route add 10\.244\.1\.0\/24/], out: `RTNETLINK: ruta agregada correctamente`, hint: "Agrega la ruta faltante hacia la subred del otro nodo (10.244.1.0/24) vía el gateway del CNI." },
+0 packets captured — no responses observed`, hint: "Use tcpdump to confirm packets go out but there's no response." },
+      { match: [/ip route add 10\.244\.1\.0\/24/], out: `RTNETLINK: route added successfully`, hint: "Add the missing route to the other node's subnet (10.244.1.0/24) via the CNI gateway." },
       { match: [/ping .*10\.244\.1\.9/, /kubectl exec .*ping/], out:
-`PING 10.244.1.9: 2 packets transmitted, 2 received, 0% packet loss`, hint: "Verifica con ping que ahora sí hay conectividad.", verify: true }
+`PING 10.244.1.9: 2 packets transmitted, 2 received, 0% packet loss`, hint: "Verify with ping that connectivity now works.", verify: true }
     ],
     solution: `kubectl get pods -o wide
 kubectl exec web-a -- ip route
@@ -469,48 +469,48 @@ kubectl exec web-a -- ping -c 2 10.244.1.9`
   {
     id: "cidr-exhaustion",
     domain: "Core Infrastructure and CNI",
-    title: "Pods en Pending por CIDR agotado",
+    title: "Pods stuck Pending due to exhausted CIDR",
     minutes: 10,
-    context: "Un Deployment escalado a 20 réplicas deja varios pods en estado Pending en un nodo específico.",
-    objective: "Confirma que la causa es agotamiento del Pod CIDR del nodo y decide el siguiente paso correcto.",
+    context: "A Deployment scaled to 20 replicas leaves several pods stuck Pending on a specific node.",
+    objective: "Confirm the cause is the node's Pod CIDR being exhausted and decide on the correct next step.",
     steps: [
       { match: [/kubectl get pods/], out:
 `web-17   0/1   Pending   <none>
-web-18   0/1   Pending   <none>`, hint: "Lista los pods para ver cuáles están Pending." },
+web-18   0/1   Pending   <none>`, hint: "List the pods to see which ones are Pending." },
       { match: [/kubectl describe pod/], out:
 `Events:
-  Warning  FailedScheduling  no available IP addresses in range 10.244.4.0/26`, hint: "Describe uno de los pods Pending y revisa la sección Events." },
+  Warning  FailedScheduling  no available IP addresses in range 10.244.4.0/26`, hint: "Describe one of the Pending pods and check the Events section." },
       { match: [/kubectl get nodes .*(jsonpath|describe)/, /kubectl describe node/], out:
-`node-4  podCIDR: 10.244.4.0/26  (máx 62 IPs, 61 pods activos)`, hint: "Revisa el podCIDR asignado a ese nodo — probablemente es una máscara muy pequeña (/26)." },
-      { match: [/kubectl cordon/], out: `node/node-4 cordoned`, hint: "Como el CIDR del nodo ya está agotado, la mitigación inmediata es sacar el nodo de scheduling (cordon) mientras se ajusta el rango.", verify: true }
+`node-4  podCIDR: 10.244.4.0/26  (max 62 IPs, 61 active pods)`, hint: "Check the podCIDR assigned to that node — it's probably too small a mask (/26)." },
+      { match: [/kubectl cordon/], out: `node/node-4 cordoned`, hint: "Since the node's CIDR is already exhausted, the immediate mitigation is to take the node out of scheduling (cordon) while the range gets adjusted.", verify: true }
     ],
     solution: `kubectl get pods -o wide | grep Pending
 kubectl describe pod web-17
 kubectl describe node node-4 | grep -A2 PodCIDR
 kubectl cordon node-4
-# ajuste real: reconfigurar --node-cidr-mask-size o el rango del clúster`
+# real fix: reconfigure --node-cidr-mask-size or the cluster's range`
   },
   {
     id: "cni-install",
     domain: "Core Infrastructure and CNI",
-    title: "Instalar y configurar el plugin CNI",
+    title: "Install and configure the CNI plugin",
     minutes: 10,
-    context: "Un clúster nuevo tiene todos los nodos en estado NotReady porque todavía no se instaló ningún plugin CNI.",
-    objective: "Instala Cilium como CNI y confirma que los nodos pasan a Ready y el plugin queda operativo.",
+    context: "A new cluster has all nodes NotReady because no CNI plugin has been installed yet.",
+    objective: "Install Cilium as the CNI and confirm the nodes become Ready and the plugin is operational.",
     steps: [
       { match: [/kubectl get nodes/], out:
 `node-1   NotReady   <none>
 node-2   NotReady   <none>
-# container runtime network not ready`, hint: "Primero confirma el síntoma: revisa el estado de los nodos." },
+# container runtime network not ready`, hint: "First confirm the symptom: check the nodes' status." },
       { match: [/helm install cilium|cilium install/], out:
 `Cilium version 1.16 installed
-DaemonSet cilium: 2/2 pods scheduled`, hint: "Instala Cilium, ya sea con 'cilium install' (CLI) o con Helm." },
+DaemonSet cilium: 2/2 pods scheduled`, hint: "Install Cilium, either with 'cilium install' (CLI) or with Helm." },
       { match: [/cilium status/], out:
 `\\__/¯\\__/¯\\__/¯\\__/¯\\__/    Cilium:         OK
                               Operator:       OK
-                              Cluster Health: 2/2 reachable`, hint: "Usa 'cilium status' para confirmar que el CNI quedó saludable." },
+                              Cluster Health: 2/2 reachable`, hint: "Use 'cilium status' to confirm the CNI is healthy." },
       { match: [/kubectl get nodes/], out: `node-1   Ready   <none>
-node-2   Ready   <none>`, hint: "Vuelve a listar los nodos — deberían pasar a Ready una vez el CNI está activo.", verify: true }
+node-2   Ready   <none>`, hint: "List the nodes again — they should become Ready once the CNI is active.", verify: true }
     ],
     solution: `kubectl get nodes
 cilium install --version 1.16.0
@@ -520,15 +520,15 @@ kubectl get nodes`
   {
     id: "multi-interface",
     domain: "Core Infrastructure and CNI",
-    title: "Pod con múltiples interfaces de red",
+    title: "Pod with multiple network interfaces",
     minutes: 12,
-    context: "Una carga de trabajo de captura de datos necesita una interfaz dedicada de alto rendimiento además de la interfaz normal del pod.",
-    objective: "Configura Multus CNI y crea un pod con una segunda interfaz de red usando una NetworkAttachmentDefinition.",
+    context: "A data capture workload needs a dedicated high-performance interface in addition to the pod's normal interface.",
+    objective: "Configure Multus CNI and create a pod with a second network interface using a NetworkAttachmentDefinition.",
     steps: [
-      { match: [/kubectl get network-attachment-definitions|kubectl get net-attach-def/], out: `No resources found in default namespace`, hint: "Confirma que aún no existe ninguna NetworkAttachmentDefinition." },
-      { match: [/kubectl apply -f.*(net-attach-def|network-attachment)/], out: `networkattachmentdefinition.k8s.cni.cncf.io/macvlan-fast created`, hint: "Crea una NetworkAttachmentDefinition (ej. tipo macvlan) que describa la segunda interfaz." },
-      { match: [/kubectl apply -f.*pod|kubectl create -f.*pod/], out: `pod/capture-pod created — annotations: k8s.v1.cni.cncf.io/networks: macvlan-fast`, hint: "Crea el pod referenciando esa NetworkAttachmentDefinition en la anotación 'k8s.v1.cni.cncf.io/networks'." },
-      { match: [/kubectl exec .*ip a|kubectl exec .*ip addr/], out: `eth0: 10.244.0.22\nnet1: 192.168.50.15  # segunda interfaz activa`, hint: "Entra al pod y confirma con 'ip addr' que ahora tiene dos interfaces.", verify: true }
+      { match: [/kubectl get network-attachment-definitions|kubectl get net-attach-def/], out: `No resources found in default namespace`, hint: "Confirm that no NetworkAttachmentDefinition exists yet." },
+      { match: [/kubectl apply -f.*(net-attach-def|network-attachment)/], out: `networkattachmentdefinition.k8s.cni.cncf.io/macvlan-fast created`, hint: "Create a NetworkAttachmentDefinition (e.g. type macvlan) describing the second interface." },
+      { match: [/kubectl apply -f.*pod|kubectl create -f.*pod/], out: `pod/capture-pod created — annotations: k8s.v1.cni.cncf.io/networks: macvlan-fast`, hint: "Create the pod referencing that NetworkAttachmentDefinition in the 'k8s.v1.cni.cncf.io/networks' annotation." },
+      { match: [/kubectl exec .*ip a|kubectl exec .*ip addr/], out: `eth0: 10.244.0.22\nnet1: 192.168.50.15  # second interface active`, hint: "Enter the pod and confirm with 'ip addr' that it now has two interfaces.", verify: true }
     ],
     solution: `kubectl get net-attach-def
 cat <<EOF | kubectl apply -f -
@@ -545,17 +545,17 @@ kubectl exec capture-pod -- ip addr`
   {
     id: "packet-tools",
     domain: "Core Infrastructure and CNI",
-    title: "Diagnóstico a nivel de paquete con iptables/tcpdump",
+    title: "Packet-level diagnosis with iptables/tcpdump",
     minutes: 10,
-    context: "El tráfico saliente de un nodo hacia internet falla de forma intermitente y sospechan de una regla de NAT rota.",
-    objective: "Usa herramientas Linux (iptables, tcpdump) para encontrar la regla de masquerade/SNAT faltante o mal configurada.",
+    context: "Outbound traffic from a node to the internet is failing intermittently and a broken NAT rule is suspected.",
+    objective: "Use Linux tools (iptables, tcpdump) to find the missing or misconfigured masquerade/SNAT rule.",
     steps: [
-      { match: [/tcpdump/], out: `12 packets captured, 0 replies — SYN sent, no SYN-ACK returned`, hint: "Captura tráfico en la interfaz de salida del nodo para confirmar que los paquetes salen pero no vuelve respuesta." },
+      { match: [/tcpdump/], out: `12 packets captured, 0 replies — SYN sent, no SYN-ACK returned`, hint: "Capture traffic on the node's outbound interface to confirm packets go out but no response comes back." },
       { match: [/iptables -t nat -L|iptables -t nat --list/], out:
 `Chain POSTROUTING
 target     prot opt source          destination
-# no hay regla MASQUERADE para 10.244.0.0/16 -> !10.244.0.0/16`, hint: "Revisa la tabla NAT — busca si falta la regla de MASQUERADE para el rango de pods." },
-      { match: [/iptables -t nat -A POSTROUTING/], out: `regla agregada: MASQUERADE para 10.244.0.0/16 hacia fuera del clúster`, hint: "Agrega la regla MASQUERADE faltante en la cadena POSTROUTING de la tabla nat.", verify: true }
+# no MASQUERADE rule for 10.244.0.0/16 -> !10.244.0.0/16`, hint: "Check the NAT table — look for a missing MASQUERADE rule for the pod range." },
+      { match: [/iptables -t nat -A POSTROUTING/], out: `rule added: MASQUERADE for 10.244.0.0/16 heading out of the cluster`, hint: "Add the missing MASQUERADE rule to the POSTROUTING chain of the nat table.", verify: true }
     ],
     solution: `tcpdump -i eth0 -n 'tcp[tcpflags] & tcp-syn != 0' -c 10
 iptables -t nat -L POSTROUTING -n -v
@@ -564,17 +564,17 @@ iptables -t nat -A POSTROUTING -s 10.244.0.0/16 ! -d 10.244.0.0/16 -j MASQUERADE
   {
     id: "service-selector",
     domain: "Service Networking and DNS",
-    title: "Service sin endpoints",
+    title: "Service with no endpoints",
     minutes: 10,
-    context: "Un Service ClusterIP no enruta tráfico a ningún pod, aunque el Deployment tiene réplicas corriendo.",
-    objective: "Encuentra por qué el Service no tiene endpoints y corrige el selector.",
+    context: "A ClusterIP Service isn't routing traffic to any pod, even though the Deployment has replicas running.",
+    objective: "Find out why the Service has no endpoints and fix the selector.",
     steps: [
-      { match: [/kubectl get endpoints|kubectl get endpointslices/], out: `checkout-svc   <none>`, hint: "Revisa si el Service tiene endpoints asociados." },
+      { match: [/kubectl get endpoints|kubectl get endpointslices/], out: `checkout-svc   <none>`, hint: "Check whether the Service has any associated endpoints." },
       { match: [/kubectl get pods --show-labels|kubectl get pods .*-l /], out:
-`web-checkout-a   app=checkout`, hint: "Compara las labels reales del pod contra el selector del Service." },
+`web-checkout-a   app=checkout`, hint: "Compare the pod's real labels against the Service's selector." },
       { match: [/kubectl get svc checkout-svc -o yaml|kubectl describe svc checkout-svc/], out:
-`selector: app=checkout-service   # no coincide con el label real (app=checkout)`, hint: "Mira el selector definido en el Service — probablemente no coincide con el label del pod." },
-      { match: [/kubectl patch svc|kubectl edit svc|kubectl apply/], out: `service/checkout-svc patched — selector actualizado a app=checkout`, hint: "Corrige el selector del Service para que coincida con las labels reales.", verify: true }
+`selector: app=checkout-service   # doesn't match the real label (app=checkout)`, hint: "Look at the selector defined on the Service — it probably doesn't match the pod's label." },
+      { match: [/kubectl patch svc|kubectl edit svc|kubectl apply/], out: `service/checkout-svc patched — selector updated to app=checkout`, hint: "Fix the Service's selector to match the real labels.", verify: true }
     ],
     solution: `kubectl get endpointslices -l kubernetes.io/service-name=checkout-svc
 kubectl get pods --show-labels
@@ -584,29 +584,29 @@ kubectl patch svc checkout-svc -p '{"spec":{"selector":{"app":"checkout"}}}'`
   {
     id: "coredns-forward",
     domain: "Service Networking and DNS",
-    title: "Resolución rota hacia dominio interno",
+    title: "Broken resolution to an internal domain",
     minutes: 12,
-    context: "Las apps no logran resolver nombres del dominio corp.internal, que debería reenviarse a un DNS interno de la empresa.",
-    objective: "Diagnostica el Corefile de CoreDNS y agrega un stub domain con forwarding condicional hacia el DNS corporativo.",
+    context: "Apps can't resolve names under the corp.internal domain, which should be forwarded to the company's internal DNS.",
+    objective: "Diagnose CoreDNS's Corefile and add a stub domain with conditional forwarding to the corporate DNS.",
     steps: [
       { match: [/kubectl -n kube-system get configmap coredns|kubectl get cm coredns/], out:
 `Corefile:
 .:53 {
     forward . /etc/resolv.conf
-    # sin bloque para corp.internal
-}`, hint: "Revisa el ConfigMap de CoreDNS para ver el Corefile actual." },
-      { match: [/nslookup|dig .*corp\.internal/], out: `;; connection timed out — no servers could be reached`, hint: "Prueba resolver un nombre de corp.internal desde un pod para confirmar el fallo." },
+    # no block for corp.internal
+}`, hint: "Check CoreDNS's ConfigMap to see the current Corefile." },
+      { match: [/nslookup|dig .*corp\.internal/], out: `;; connection timed out — no servers could be reached`, hint: "Try resolving a corp.internal name from a pod to confirm the failure." },
       { match: [/kubectl edit cm coredns|kubectl apply.*coredns/], out:
 `configmap/coredns configured
 corp.internal:53 {
     forward . 10.10.0.53
-}`, hint: "Agrega un bloque de stub domain para corp.internal apuntando al DNS corporativo (10.10.0.53)." },
-      { match: [/kubectl -n kube-system rollout restart deploy(ment)? coredns/], out: `deployment.apps/coredns restarted`, hint: "CoreDNS necesita reiniciarse (o recargar) para tomar el nuevo Corefile.", verify: true }
+}`, hint: "Add a stub domain block for corp.internal pointing at the corporate DNS (10.10.0.53)." },
+      { match: [/kubectl -n kube-system rollout restart deploy(ment)? coredns/], out: `deployment.apps/coredns restarted`, hint: "CoreDNS needs to restart (or reload) to pick up the new Corefile.", verify: true }
     ],
     solution: `kubectl -n kube-system get configmap coredns -o yaml
 kubectl exec -it debug-pod -- nslookup service.corp.internal
 kubectl -n kube-system edit configmap coredns
-# agregar:
+# add:
 #   corp.internal:53 {
 #       forward . 10.10.0.53
 #   }
@@ -615,14 +615,14 @@ kubectl -n kube-system rollout restart deployment coredns`
   {
     id: "l4-services",
     domain: "Service Networking and DNS",
-    title: "Elegir y configurar el tipo correcto de Service L4",
+    title: "Choosing and configuring the right L4 Service type",
     minutes: 8,
-    context: "Un equipo pide exponer tres cargas distintas: una interna entre microservicios, una para pruebas locales de un nodo, y una accesible desde internet.",
-    objective: "Crea el tipo de Service correcto para cada caso: ClusterIP, NodePort y LoadBalancer.",
+    context: "A team needs to expose three different workloads: one internal between microservices, one for local testing on a node, and one reachable from the internet.",
+    objective: "Create the right Service type for each case: ClusterIP, NodePort, and LoadBalancer.",
     steps: [
-      { match: [/kubectl expose .*clusterip|kubectl create service clusterip/], out: `service/orders-internal created — type: ClusterIP`, hint: "Para tráfico interno entre microservicios, usa ClusterIP (es el tipo por defecto)." },
-      { match: [/kubectl expose .*nodeport|kubectl create service nodeport/], out: `service/debug-nodeport created — type: NodePort  port: 30080`, hint: "Para acceso rápido desde un nodo en pruebas, usa NodePort." },
-      { match: [/kubectl expose .*loadbalancer|kubectl create service loadbalancer/], out: `service/public-api created — type: LoadBalancer  externalIP: pending`, hint: "Para exponerlo a internet, usa LoadBalancer.", verify: true }
+      { match: [/kubectl expose .*clusterip|kubectl create service clusterip/], out: `service/orders-internal created — type: ClusterIP`, hint: "For internal traffic between microservices, use ClusterIP (it's the default type)." },
+      { match: [/kubectl expose .*nodeport|kubectl create service nodeport/], out: `service/debug-nodeport created — type: NodePort  port: 30080`, hint: "For quick access from a node during testing, use NodePort." },
+      { match: [/kubectl expose .*loadbalancer|kubectl create service loadbalancer/], out: `service/public-api created — type: LoadBalancer  externalIP: pending`, hint: "To expose it to the internet, use LoadBalancer.", verify: true }
     ],
     solution: `kubectl expose deployment orders --name=orders-internal --type=ClusterIP --port=80
 kubectl expose deployment debug --name=debug-nodeport --type=NodePort --port=8080
@@ -631,15 +631,15 @@ kubectl expose deployment api --name=public-api --type=LoadBalancer --port=443`
   {
     id: "kubeproxy-mode",
     domain: "Service Networking and DNS",
-    title: "kube-proxy vs. reemplazo con eBPF",
+    title: "kube-proxy vs. eBPF replacement",
     minutes: 10,
-    context: "El equipo de plataforma sospecha que el modo actual de kube-proxy (iptables) agrega latencia en clústeres grandes y quiere migrar al modo eBPF de Cilium.",
-    objective: "Confirma el modo actual de kube-proxy y migra a kube-proxy-replacement con Cilium.",
+    context: "The platform team suspects kube-proxy's current mode (iptables) adds latency in large clusters and wants to migrate to Cilium's eBPF mode.",
+    objective: "Confirm kube-proxy's current mode and migrate to kube-proxy-replacement with Cilium.",
     steps: [
-      { match: [/kubectl -n kube-system get cm kube-proxy|kubectl get configmap kube-proxy/], out: `mode: "iptables"  # miles de reglas iptables activas`, hint: "Revisa el ConfigMap de kube-proxy para confirmar el modo actual." },
-      { match: [/helm upgrade cilium|cilium install .*kube-proxy-replacement/], out: `Cilium reinstalado con kubeProxyReplacement: true`, hint: "Reinstala/actualiza Cilium con kubeProxyReplacement habilitado." },
-      { match: [/kubectl -n kube-system delete ds kube-proxy|kubectl delete daemonset kube-proxy/], out: `daemonset.apps "kube-proxy" deleted`, hint: "Elimina el DaemonSet de kube-proxy — Cilium ahora maneja el service routing vía eBPF." },
-      { match: [/cilium status/], out: `KubeProxyReplacement:   True   [eth0]`, hint: "Confirma con 'cilium status' que el reemplazo quedó activo.", verify: true }
+      { match: [/kubectl -n kube-system get cm kube-proxy|kubectl get configmap kube-proxy/], out: `mode: "iptables"  # thousands of active iptables rules`, hint: "Check kube-proxy's ConfigMap to confirm the current mode." },
+      { match: [/helm upgrade cilium|cilium install .*kube-proxy-replacement/], out: `Cilium reinstalled with kubeProxyReplacement: true`, hint: "Reinstall/upgrade Cilium with kubeProxyReplacement enabled." },
+      { match: [/kubectl -n kube-system delete ds kube-proxy|kubectl delete daemonset kube-proxy/], out: `daemonset.apps "kube-proxy" deleted`, hint: "Delete the kube-proxy DaemonSet — Cilium now handles service routing via eBPF." },
+      { match: [/cilium status/], out: `KubeProxyReplacement:   True   [eth0]`, hint: "Confirm with 'cilium status' that the replacement is active.", verify: true }
     ],
     solution: `kubectl -n kube-system get configmap kube-proxy -o yaml | grep mode
 helm upgrade cilium cilium/cilium --namespace kube-system \
@@ -650,17 +650,17 @@ cilium status | grep KubeProxyReplacement`
   {
     id: "endpoint-availability",
     domain: "Service Networking and DNS",
-    title: "Pods sanos pero fuera del balanceo",
+    title: "Healthy pods but out of the load balancing pool",
     minutes: 10,
-    context: "Un Deployment tiene 4/4 pods Running, pero el Service solo reparte tráfico entre 2 — los otros dos nunca reciben peticiones.",
-    objective: "Diagnostica por qué esos pods no aparecen como endpoints disponibles y corrige el problema de disponibilidad.",
+    context: "A Deployment has 4/4 pods Running, but the Service only distributes traffic to 2 — the other two never receive requests.",
+    objective: "Diagnose why those pods don't show up as available endpoints and fix the availability issue.",
     steps: [
-      { match: [/kubectl get endpointslices|kubectl get endpoints/], out: `orders-svc   2 endpoints ready, 2 not ready`, hint: "Revisa cuántos endpoints están realmente 'ready' contra el total de pods." },
+      { match: [/kubectl get endpointslices|kubectl get endpoints/], out: `orders-svc   2 endpoints ready, 2 not ready`, hint: "Check how many endpoints are actually 'ready' versus the total pod count." },
       { match: [/kubectl describe pod/], out:
 `Readiness probe failed: HTTP probe failed with statuscode 503
-Warning  Unhealthy`, hint: "Describe uno de los pods 'no listos' — probablemente falla el readiness probe." },
-      { match: [/kubectl logs/], out: `ERROR: waiting for DB connection pool warmup (still initializing)`, hint: "Revisa los logs del pod para entender por qué el readiness probe no pasa." },
-      { match: [/kubectl edit deploy|kubectl patch deploy|kubectl apply -f.*deployment/], out: `deployment.apps/orders patched — initialDelaySeconds ajustado a 30s`, hint: "Ajusta el readiness probe (ej. initialDelaySeconds) para dar tiempo real de arranque antes de marcarlo listo.", verify: true }
+Warning  Unhealthy`, hint: "Describe one of the 'not ready' pods — the readiness probe is probably failing." },
+      { match: [/kubectl logs/], out: `ERROR: waiting for DB connection pool warmup (still initializing)`, hint: "Check the pod's logs to understand why the readiness probe isn't passing." },
+      { match: [/kubectl edit deploy|kubectl patch deploy|kubectl apply -f.*deployment/], out: `deployment.apps/orders patched — initialDelaySeconds adjusted to 30s`, hint: "Adjust the readiness probe (e.g. initialDelaySeconds) to give real startup time before marking it ready.", verify: true }
     ],
     solution: `kubectl get endpointslices -l kubernetes.io/service-name=orders-svc
 kubectl describe pod orders-3
@@ -671,18 +671,18 @@ kubectl patch deployment orders --type=json \
   {
     id: "gateway-canary",
     domain: "Service Networking and DNS",
-    title: "Canary release con Gateway API",
+    title: "Canary release with Gateway API",
     minutes: 14,
-    context: "Necesitas enviar el 10% del tráfico de checkout-svc a la versión v2 antes de un rollout completo.",
-    objective: "Crea un HTTPRoute que reparta el tráfico 90/10 entre las versiones v1 y v2 del backend.",
+    context: "You need to send 10% of checkout-svc's traffic to version v2 before a full rollout.",
+    objective: "Create an HTTPRoute that splits traffic 90/10 between the v1 and v2 backend versions.",
     steps: [
-      { match: [/kubectl get httproute/], out: `No resources found`, hint: "Confirma que todavía no existe un HTTPRoute para este servicio." },
+      { match: [/kubectl get httproute/], out: `No resources found`, hint: "Confirm no HTTPRoute exists yet for this service." },
       { match: [/kubectl apply -f.*httproute|kubectl create -f.*httproute/], out:
 `httproute.gateway.networking.k8s.io/checkout-route created
 backendRefs:
   - name: checkout-v1  weight: 90
-  - name: checkout-v2  weight: 10`, hint: "Crea el HTTPRoute con dos backendRefs y sus pesos (weight: 90 y weight: 10)." },
-      { match: [/kubectl describe httproute|kubectl get httproute checkout-route -o yaml/], out: `Status: Accepted   ParentRefs: gateway/main-gateway`, hint: "Verifica que el HTTPRoute fue aceptado por el Gateway.", verify: true }
+  - name: checkout-v2  weight: 10`, hint: "Create the HTTPRoute with two backendRefs and their weights (weight: 90 and weight: 10)." },
+      { match: [/kubectl describe httproute|kubectl get httproute checkout-route -o yaml/], out: `Status: Accepted   ParentRefs: gateway/main-gateway`, hint: "Verify the HTTPRoute was accepted by the Gateway.", verify: true }
     ],
     solution: `kubectl get httproute
 cat <<EOF | kubectl apply -f -
@@ -707,17 +707,17 @@ kubectl describe httproute checkout-route`
   {
     id: "egress-gateway",
     domain: "Advanced Traffic Management",
-    title: "IP de salida estática con Egress Gateway",
+    title: "Static egress IP with Egress Gateway",
     minutes: 12,
-    context: "Un proveedor externo exige que todo el tráfico saliente del namespace billing use una IP fija para whitelisting.",
-    objective: "Configura una CiliumEgressGatewayPolicy que fuerce el tráfico saliente de billing por un nodo con IP estática.",
+    context: "An external provider requires all outbound traffic from the billing namespace to use a fixed IP for whitelisting.",
+    objective: "Configure a CiliumEgressGatewayPolicy that forces billing's outbound traffic through a node with a static IP.",
     steps: [
-      { match: [/cilium egress|kubectl get ciliumegressgatewaypolicy/], out: `No resources found`, hint: "Confirma que aún no existe ninguna política de egress gateway." },
+      { match: [/cilium egress|kubectl get ciliumegressgatewaypolicy/], out: `No resources found`, hint: "Confirm no egress gateway policy exists yet." },
       { match: [/kubectl apply -f.*egress|kubectl create -f.*egress/], out:
 `ciliumegressgatewaypolicy.cilium.io/billing-egress created
 egressIP: 203.0.113.10
-selector: namespace=billing`, hint: "Crea la CiliumEgressGatewayPolicy indicando el selector del namespace billing y el nodo egress con su IP estática." },
-      { match: [/curl .*ifconfig|kubectl exec .*curl/], out: `origin: 203.0.113.10`, hint: "Desde un pod de billing, haz una petición saliente y confirma que la IP de origen es la estática.", verify: true }
+selector: namespace=billing`, hint: "Create the CiliumEgressGatewayPolicy specifying the billing namespace selector and the egress node with its static IP." },
+      { match: [/curl .*ifconfig|kubectl exec .*curl/], out: `origin: 203.0.113.10`, hint: "From a billing pod, make an outbound request and confirm the source IP is the static one.", verify: true }
     ],
     solution: `kubectl get ciliumegressgatewaypolicy
 cat <<EOF | kubectl apply -f -
@@ -743,14 +743,14 @@ kubectl exec -n billing debug-pod -- curl -s ifconfig.me`
   {
     id: "llm-traffic",
     domain: "Advanced Traffic Management",
-    title: "Optimizar tráfico de un servicio de inferencia LLM",
+    title: "Optimizing traffic for an LLM inference service",
     minutes: 12,
-    context: "Un servicio de inferencia LLM sirve respuestas por streaming (conexiones largas). El balanceo por defecto está rotando cada request entre pods distintos y rompe el streaming.",
-    objective: "Ajusta el balanceo para mantener conexiones largas pegadas al mismo pod backend y evitar cortes de streaming.",
+    context: "An LLM inference service serves responses via streaming (long-lived connections). The default load balancing rotates each request across different pods and breaks the streaming.",
+    objective: "Adjust the load balancing to keep long-lived connections pinned to the same backend pod and avoid streaming interruptions.",
     steps: [
-      { match: [/kubectl logs|kubectl exec .*curl.*stream/], out: `stream interrupted after 4.2s — connection rebalanced mid-response`, hint: "Reproduce el síntoma: una conexión de streaming se corta a mitad de camino." },
-      { match: [/kubectl get svc llm-inference -o yaml|kubectl describe svc llm-inference/], out: `sessionAffinity: None  # cada conexión puede ir a un pod distinto`, hint: "Revisa la configuración actual del Service — probablemente no tiene session affinity." },
-      { match: [/kubectl patch svc|kubectl edit svc|kubectl apply -f.*svc/], out: `service/llm-inference patched — sessionAffinity: ClientIP, timeoutSeconds: 3600`, hint: "Activa sessionAffinity: ClientIP (o un hash consistente si usas Gateway API) para que la conexión se mantenga en el mismo pod.", verify: true }
+      { match: [/kubectl logs|kubectl exec .*curl.*stream/], out: `stream interrupted after 4.2s — connection rebalanced mid-response`, hint: "Reproduce the symptom: a streaming connection cuts off midway." },
+      { match: [/kubectl get svc llm-inference -o yaml|kubectl describe svc llm-inference/], out: `sessionAffinity: None  # each connection can go to a different pod`, hint: "Check the Service's current config — it probably has no session affinity." },
+      { match: [/kubectl patch svc|kubectl edit svc|kubectl apply -f.*svc/], out: `service/llm-inference patched — sessionAffinity: ClientIP, timeoutSeconds: 3600`, hint: "Enable sessionAffinity: ClientIP (or a consistent hash if you're using Gateway API) so the connection stays on the same pod.", verify: true }
     ],
     solution: `kubectl exec debug-pod -- curl -N http://llm-inference/stream
 kubectl describe svc llm-inference
@@ -760,17 +760,17 @@ kubectl patch svc llm-inference -p \
   {
     id: "routing-expose",
     domain: "Advanced Traffic Management",
-    title: "Exponer dos APIs internas por rutas distintas",
+    title: "Exposing two internal APIs via different routes",
     minutes: 12,
-    context: "Dos equipos comparten un mismo dominio público y necesitan que /orders y /inventory enruten a servicios internos distintos, sin exponer cada uno por su cuenta.",
-    objective: "Configura un Gateway con enrutamiento basado en path para exponer ambos servicios de forma controlada.",
+    context: "Two teams share the same public domain and need /orders and /inventory to route to different internal services, without each exposing their own.",
+    objective: "Configure a Gateway with path-based routing to expose both services in a controlled way.",
     steps: [
-      { match: [/kubectl get gateway/], out: `main-gateway   listeners: [http:80]   status: Programmed`, hint: "Confirma que ya existe un Gateway base sobre el que agregar las rutas." },
+      { match: [/kubectl get gateway/], out: `main-gateway   listeners: [http:80]   status: Programmed`, hint: "Confirm a base Gateway already exists to add the routes onto." },
       { match: [/kubectl apply -f.*httproute|kubectl create -f.*httproute/], out:
 `httproute.gateway.networking.k8s.io/path-routes created
   /orders    -> orders-svc
-  /inventory -> inventory-svc`, hint: "Crea un HTTPRoute con dos reglas 'matches.path' distintas, una por cada backend." },
-      { match: [/kubectl exec .*curl.*\/orders|kubectl exec .*curl.*\/inventory/], out: `HTTP/1.1 200 OK — routed correctly by path`, hint: "Verifica que cada path llega al backend correcto.", verify: true, allowRepeat: true }
+  /inventory -> inventory-svc`, hint: "Create an HTTPRoute with two distinct 'matches.path' rules, one per backend." },
+      { match: [/kubectl exec .*curl.*\/orders|kubectl exec .*curl.*\/inventory/], out: `HTTP/1.1 200 OK — routed correctly by path`, hint: "Verify each path reaches the correct backend.", verify: true, allowRepeat: true }
     ],
     solution: `kubectl get gateway main-gateway
 cat <<EOF | kubectl apply -f -
@@ -790,15 +790,15 @@ kubectl exec debug-pod -- curl -s https://api.example.com/orders`
   {
     id: "clustermesh",
     domain: "Advanced Traffic Management",
-    title: "Descubrimiento de servicios cross-cluster",
+    title: "Cross-cluster service discovery",
     minutes: 14,
-    context: "Un servicio de catálogo vive en el clúster B (región secundaria) y el clúster A necesita poder llamarlo como si fuera local, con failover automático.",
-    objective: "Conecta ambos clústeres con Cluster Mesh y confirma que el servicio remoto es descubrible y balanceado desde el clúster A.",
+    context: "A catalog service lives in cluster B (secondary region) and cluster A needs to be able to call it as if it were local, with automatic failover.",
+    objective: "Connect both clusters with Cluster Mesh and confirm the remote service is discoverable and load-balanced from cluster A.",
     steps: [
-      { match: [/cilium clustermesh status/], out: `Cluster Mesh: disabled — no remote clusters connected`, hint: "Confirma el estado actual de Cluster Mesh — probablemente aún no está conectado." },
-      { match: [/cilium clustermesh enable/], out: `Cluster Mesh enabled on cluster-a — API server exposed`, hint: "Habilita Cluster Mesh en el clúster local." },
-      { match: [/cilium clustermesh connect/], out: `Connected cluster-a <-> cluster-b — 1 remote cluster reachable`, hint: "Conecta el clúster A con el clúster B usando 'cilium clustermesh connect'." },
-      { match: [/kubectl get svc catalog-svc -o yaml|kubectl describe svc catalog-svc/], out: `annotations: service.cilium.io/global: "true"  # servicio visible cross-cluster`, hint: "Marca el Service de catálogo como global (io.cilium/global-service) para que sea visible desde el otro clúster.", verify: true }
+      { match: [/cilium clustermesh status/], out: `Cluster Mesh: disabled — no remote clusters connected`, hint: "Confirm Cluster Mesh's current status — it's probably not connected yet." },
+      { match: [/cilium clustermesh enable/], out: `Cluster Mesh enabled on cluster-a — API server exposed`, hint: "Enable Cluster Mesh on the local cluster." },
+      { match: [/cilium clustermesh connect/], out: `Connected cluster-a <-> cluster-b — 1 remote cluster reachable`, hint: "Connect cluster A to cluster B using 'cilium clustermesh connect'." },
+      { match: [/kubectl get svc catalog-svc -o yaml|kubectl describe svc catalog-svc/], out: `annotations: service.cilium.io/global: "true"  # service visible cross-cluster`, hint: "Mark the catalog Service as global (io.cilium/global-service) so it's visible from the other cluster.", verify: true }
     ],
     solution: `cilium clustermesh status
 cilium clustermesh enable --context cluster-a
@@ -809,15 +809,15 @@ kubectl --context cluster-a get svc catalog-svc`
   {
     id: "netpol-deny",
     domain: "Network Security and Policy",
-    title: "Aislar namespace con default-deny",
+    title: "Isolating a namespace with default-deny",
     minutes: 12,
-    context: "El namespace payments necesita bloquear todo el tráfico por defecto y permitir explícitamente solo lo que venga de api-gateway.",
-    objective: "Implementa NetworkPolicy default-deny y luego una regla de allow específica.",
+    context: "The payments namespace needs to block all traffic by default and explicitly allow only what comes from api-gateway.",
+    objective: "Implement a default-deny NetworkPolicy and then a specific allow rule.",
     steps: [
-      { match: [/kubectl exec .*curl.*payments/], out: `curl: connected — ⚠ sin política, cualquier pod puede llegar a payments`, hint: "Primero confirma el problema: cualquier pod puede llegar hoy a payments sin restricción." },
-      { match: [/kubectl apply -f.*deny|kubectl create -f.*deny/], out: `networkpolicy.networking.k8s.io/default-deny created — podSelector: {} / policyTypes: [Ingress]`, hint: "Crea una NetworkPolicy que bloquee todo el ingress por defecto en el namespace payments." },
-      { match: [/kubectl apply -f.*allow|kubectl create -f.*allow/], out: `networkpolicy.networking.k8s.io/allow-api-gateway created — from: namespaceSelector app=api-gateway`, hint: "Crea una segunda policy que permita explícitamente el tráfico desde el namespace api-gateway." },
-      { match: [/kubectl exec .*curl.*payments/i], out: `⚠ ya se probó antes — vuelve a probar desde un pod de otro namespace para confirmar el bloqueo, y desde api-gateway para confirmar el acceso.`, hint: "Verifica ambos casos: bloqueado desde otros namespaces, permitido desde api-gateway.", verify: true, allowRepeat: true }
+      { match: [/kubectl exec .*curl.*payments/], out: `curl: connected — ⚠ no policy, any pod can reach payments`, hint: "First confirm the problem: any pod can currently reach payments unrestricted." },
+      { match: [/kubectl apply -f.*deny|kubectl create -f.*deny/], out: `networkpolicy.networking.k8s.io/default-deny created — podSelector: {} / policyTypes: [Ingress]`, hint: "Create a NetworkPolicy that blocks all ingress by default in the payments namespace." },
+      { match: [/kubectl apply -f.*allow|kubectl create -f.*allow/], out: `networkpolicy.networking.k8s.io/allow-api-gateway created — from: namespaceSelector app=api-gateway`, hint: "Create a second policy that explicitly allows traffic from the api-gateway namespace." },
+      { match: [/kubectl exec .*curl.*payments/i], out: `⚠ already tested before — try again from a pod in another namespace to confirm the block, and from api-gateway to confirm access.`, hint: "Verify both cases: blocked from other namespaces, allowed from api-gateway.", verify: true, allowRepeat: true }
     ],
     solution: `kubectl exec -n random-ns debug-pod -- curl -s payments.payments:8080
 cat <<EOF | kubectl apply -f -
@@ -844,14 +844,14 @@ EOF`
   {
     id: "cert-manager-tls",
     domain: "Network Security and Policy",
-    title: "TLS para un Gateway con cert-manager",
+    title: "TLS for a Gateway with cert-manager",
     minutes: 10,
-    context: "El Gateway público de checkout aún sirve tráfico en texto plano y necesita terminar TLS con un certificado gestionado.",
-    objective: "Emite un certificado con cert-manager y referencia el Secret TLS resultante desde el Gateway.",
+    context: "Checkout's public Gateway still serves plaintext traffic and needs to terminate TLS with a managed certificate.",
+    objective: "Issue a certificate with cert-manager and reference the resulting TLS Secret from the Gateway.",
     steps: [
-      { match: [/kubectl get certificate/], out: `No resources found`, hint: "Confirma que aún no existe un Certificate para este dominio." },
-      { match: [/kubectl apply -f.*certificate|kubectl create -f.*certificate/], out: `certificate.cert-manager.io/checkout-tls created — status: Ready (Secret: checkout-tls-secret)`, hint: "Crea el recurso Certificate apuntando al ClusterIssuer y al dominio checkout.example.com." },
-      { match: [/kubectl edit gateway|kubectl patch gateway|kubectl apply -f.*gateway/], out: `gateway.gateway.networking.k8s.io/main-gateway configured — listener 'https' now references Secret checkout-tls-secret`, hint: "Referencia el Secret TLS generado (checkout-tls-secret) en el listener HTTPS del Gateway.", verify: true }
+      { match: [/kubectl get certificate/], out: `No resources found`, hint: "Confirm no Certificate exists yet for this domain." },
+      { match: [/kubectl apply -f.*certificate|kubectl create -f.*certificate/], out: `certificate.cert-manager.io/checkout-tls created — status: Ready (Secret: checkout-tls-secret)`, hint: "Create the Certificate resource pointing at the ClusterIssuer and the checkout.example.com domain." },
+      { match: [/kubectl edit gateway|kubectl patch gateway|kubectl apply -f.*gateway/], out: `gateway.gateway.networking.k8s.io/main-gateway configured — listener 'https' now references Secret checkout-tls-secret`, hint: "Reference the generated TLS Secret (checkout-tls-secret) in the Gateway's HTTPS listener.", verify: true }
     ],
     solution: `kubectl get certificate
 cat <<EOF | kubectl apply -f -
@@ -869,15 +869,15 @@ kubectl patch gateway main-gateway --type merge -p \
   {
     id: "node-pod-encryption",
     domain: "Network Security and Policy",
-    title: "Encriptación transparente entre nodos",
+    title: "Transparent encryption between nodes",
     minutes: 10,
-    context: "Un auditor de seguridad reporta que el tráfico entre nodos viaja en texto plano dentro del clúster — se requiere cifrado en tránsito a nivel de red.",
-    objective: "Activa encriptación transparente (WireGuard) entre nodos y confirma que el tráfico ya no es legible en claro.",
+    context: "A security auditor reports that traffic between nodes travels in plaintext inside the cluster — encryption in transit is required at the network level.",
+    objective: "Enable transparent encryption (WireGuard) between nodes and confirm the traffic is no longer readable in plaintext.",
     steps: [
-      { match: [/tcpdump/], out: `payload legible en texto plano — sin cifrado detectado entre node-1 y node-2`, hint: "Primero confirma el problema: captura tráfico entre nodos y observa que va sin cifrar." },
-      { match: [/helm upgrade cilium|cilium install .*encryption/], out: `Cilium actualizado — encryption.type: wireguard, encryption.enabled: true`, hint: "Reconfigura Cilium con 'encryption.enabled=true' y 'encryption.type=wireguard'." },
-      { match: [/cilium status/], out: `Encryption:   Wireguard   [NodeEncryption: Enabled]`, hint: "Confirma con 'cilium status' que la encriptación quedó activa en todos los nodos." },
-      { match: [/tcpdump/], out: `payload cifrado — contenido no legible (WireGuard activo)`, hint: "Vuelve a capturar tráfico entre nodos y confirma que ahora va cifrado.", verify: true, allowRepeat: true }
+      { match: [/tcpdump/], out: `payload readable in plaintext — no encryption detected between node-1 and node-2`, hint: "First confirm the problem: capture traffic between nodes and observe it's unencrypted." },
+      { match: [/helm upgrade cilium|cilium install .*encryption/], out: `Cilium updated — encryption.type: wireguard, encryption.enabled: true`, hint: "Reconfigure Cilium with 'encryption.enabled=true' and 'encryption.type=wireguard'." },
+      { match: [/cilium status/], out: `Encryption:   Wireguard   [NodeEncryption: Enabled]`, hint: "Confirm with 'cilium status' that encryption is active on all nodes." },
+      { match: [/tcpdump/], out: `payload encrypted — content not readable (WireGuard active)`, hint: "Capture traffic between nodes again and confirm it's now encrypted.", verify: true, allowRepeat: true }
     ],
     solution: `tcpdump -i eth0 -A -c 5 host node-2
 helm upgrade cilium cilium/cilium --namespace kube-system \
@@ -888,15 +888,15 @@ tcpdump -i eth0 -A -c 5 host node-2`
   {
     id: "pod-auth",
     domain: "Network Security and Policy",
-    title: "Autenticación y autorización a nivel de pod",
+    title: "Pod-level authentication and authorization",
     minutes: 14,
-    context: "Dos servicios internos se llaman entre sí solo confiando en la red (NetworkPolicy), sin verificar identidad — seguridad quiere identidad criptográfica por servicio (zero trust).",
-    objective: "Implementa mTLS basado en identidad SPIFFE/SPIRE entre dos servicios para que solo workloads con identidad válida puedan comunicarse.",
+    context: "Two internal services call each other relying only on network trust (NetworkPolicy), without verifying identity — security wants cryptographic per-service identity (zero trust).",
+    objective: "Implement SPIFFE/SPIRE identity-based mTLS between two services so only workloads with valid identity can communicate.",
     steps: [
-      { match: [/kubectl get pods -n spire/], out: `spire-server-0   Running\nspire-agent-x9k  Running (DaemonSet)`, hint: "Confirma que SPIRE server y agent ya están desplegados en el clúster." },
-      { match: [/kubectl apply -f.*registration|spire-server entry create/], out: `entry created — SPIFFE ID: spiffe://corp.internal/ns/payments/sa/billing-client`, hint: "Registra una entrada SPIFFE para el workload cliente, ligada a su ServiceAccount." },
-      { match: [/kubectl apply -f.*(authorizationpolicy|cilium.*auth)/], out: `authorization policy created — requires mTLS identity spiffe://corp.internal/ns/payments/sa/billing-client`, hint: "Crea la política que exige esa identidad SPIFFE para poder llamar al servicio destino." },
-      { match: [/kubectl exec .*curl/], out: `403 Forbidden — llamada sin identidad SPIFFE válida fue rechazada; con la identidad correcta: 200 OK`, hint: "Verifica: una llamada sin identidad válida debe ser rechazada, y una con la identidad correcta debe pasar.", verify: true }
+      { match: [/kubectl get pods -n spire/], out: `spire-server-0   Running\nspire-agent-x9k  Running (DaemonSet)`, hint: "Confirm SPIRE server and agent are already deployed in the cluster." },
+      { match: [/kubectl apply -f.*registration|spire-server entry create/], out: `entry created — SPIFFE ID: spiffe://corp.internal/ns/payments/sa/billing-client`, hint: "Register a SPIFFE entry for the client workload, tied to its ServiceAccount." },
+      { match: [/kubectl apply -f.*(authorizationpolicy|cilium.*auth)/], out: `authorization policy created — requires mTLS identity spiffe://corp.internal/ns/payments/sa/billing-client`, hint: "Create the policy that requires that SPIFFE identity to be able to call the destination service." },
+      { match: [/kubectl exec .*curl/], out: `403 Forbidden — call without a valid SPIFFE identity was rejected; with the correct identity: 200 OK`, hint: "Verify: a call without a valid identity should be rejected, and one with the correct identity should pass.", verify: true }
     ],
     solution: `kubectl get pods -n spire
 spire-server entry create \
@@ -905,7 +905,7 @@ spire-server entry create \
   -selector k8s:ns:payments -selector k8s:sa:billing-client
 cat <<EOF | kubectl apply -f -
 apiVersion: cilium.io/v2
-kind: CiliumAuthenticationPolicy   # o CRD equivalente de tu mesh
+kind: CiliumAuthenticationPolicy   # or your mesh's equivalent CRD
 metadata: {name: require-spiffe-billing}
 spec:
   target: {service: payments-svc}
@@ -917,65 +917,65 @@ kubectl exec billing-client -- curl -s payments-svc`
   {
     id: "hubble-flow",
     domain: "Observability",
-    title: "Auditar un bloqueo con Hubble",
+    title: "Auditing a block with Hubble",
     minutes: 8,
-    context: "Un equipo reporta que sus llamadas a inventory-svc fallan de forma intermitente y sospechan de una NetworkPolicy.",
-    objective: "Usa Hubble para confirmar si el tráfico está siendo bloqueado y por qué política.",
+    context: "A team reports their calls to inventory-svc are intermittently failing and they suspect a NetworkPolicy.",
+    objective: "Use Hubble to confirm whether traffic is being blocked and by which policy.",
     steps: [
       { match: [/hubble observe/], out:
 `TIMESTAMP   SRC              DST              VERDICT   POLICY
-10:22:01    web-orders-7f9   inventory-svc    DROPPED   deny-cross-ns`, hint: "Usa 'hubble observe' filtrando por el destino inventory-svc para ver el veredicto del tráfico." },
-      { match: [/kubectl describe.*networkpolicy deny-cross-ns|kubectl get networkpolicy deny-cross-ns -o yaml/], out: `deny-cross-ns bloquea todo ingress excepto desde namespace=orders-internal (el pod real vive en namespace=orders)`, hint: "Revisa la definición de la policy 'deny-cross-ns' que aparece como responsable del DROP.", verify: true }
+10:22:01    web-orders-7f9   inventory-svc    DROPPED   deny-cross-ns`, hint: "Use 'hubble observe' filtering by the inventory-svc destination to see the traffic's verdict." },
+      { match: [/kubectl describe.*networkpolicy deny-cross-ns|kubectl get networkpolicy deny-cross-ns -o yaml/], out: `deny-cross-ns blocks all ingress except from namespace=orders-internal (the real pod lives in namespace=orders)`, hint: "Check the definition of the 'deny-cross-ns' policy that shows up as responsible for the DROP.", verify: true }
     ],
     solution: `hubble observe --to-pod inventory-svc --verdict DROPPED
 kubectl get networkpolicy deny-cross-ns -n inventory -o yaml
-# causa: el namespace del pod origen no coincide con el permitido por la policy`
+# cause: the source pod's namespace doesn't match what the policy allows`
   },
   {
     id: "metrics-health",
     domain: "Observability",
-    title: "Detectar degradación de red con métricas",
+    title: "Detecting network degradation with metrics",
     minutes: 10,
-    context: "El equipo de plataforma reporta 'la red se siente lenta' sin poder señalar qué servicio específico. Necesitas confirmarlo con métricas antes de investigar a ciegas.",
-    objective: "Usa métricas de Prometheus/Hubble para identificar qué servicio concentra los drops o la mayor latencia.",
+    context: "The platform team reports 'the network feels slow' without being able to point at a specific service. You need to confirm it with metrics before investigating blindly.",
+    objective: "Use Prometheus/Hubble metrics to identify which service concentrates the drops or the highest latency.",
     steps: [
-      { match: [/kubectl -n kube-system port-forward.*(prometheus|hubble)/], out: `Forwarding from 127.0.0.1:9090 -> 9090`, hint: "Expón el endpoint de métricas (Prometheus o hubble-metrics) para poder consultarlo." },
+      { match: [/kubectl -n kube-system port-forward.*(prometheus|hubble)/], out: `Forwarding from 127.0.0.1:9090 -> 9090`, hint: "Expose the metrics endpoint (Prometheus or hubble-metrics) so you can query it." },
       { match: [/topk|hubble_drop_total|hubble_flows_processed_total|rate\(/], out:
 `topk(3, sum(rate(hubble_drop_total[5m])) by (destination))
   inventory-svc     42.1/s
   billing-svc        3.2/s
-  orders-svc         0.4/s`, hint: "Consulta una métrica agregada de drops o latencia (ej. hubble_drop_total) agrupada por destino, y ordénala con topk." },
-      { match: [/hubble observe.*inventory-svc|kubectl describe .*inventory-svc/], out: `Confirmado: inventory-svc concentra el 90% de los drops — foco de la investigación.`, hint: "Con el servicio identificado por métricas, profundiza en él específicamente.", verify: true }
+  orders-svc         0.4/s`, hint: "Query an aggregated drop or latency metric (e.g. hubble_drop_total) grouped by destination, and sort it with topk." },
+      { match: [/hubble observe.*inventory-svc|kubectl describe .*inventory-svc/], out: `Confirmed: inventory-svc accounts for 90% of the drops — focus of the investigation.`, hint: "With the service identified by metrics, dig into it specifically.", verify: true }
     ],
     solution: `kubectl -n kube-system port-forward svc/prometheus 9090:9090
-# en Prometheus:
+# in Prometheus:
 topk(3, sum(rate(hubble_drop_total[5m])) by (destination))
 hubble observe --to-pod inventory-svc --verdict DROPPED -o json | jq '.[] | .Summary'`
   },
   {
     id: "tracing-e2e",
     domain: "Observability",
-    title: "Tracing end-to-end de una petición lenta",
+    title: "End-to-end tracing of a slow request",
     minutes: 12,
-    context: "Una petición de checkout tarda 4 segundos en total, pero nadie sabe en qué salto de red (o servicio) se está yendo el tiempo.",
-    objective: "Usa tracing distribuido para identificar en qué segmento de la ruta de red se concentra la latencia.",
+    context: "A checkout request takes 4 seconds total, but nobody knows which network hop (or service) the time is going into.",
+    objective: "Use distributed tracing to identify which segment of the network path the latency is concentrated in.",
     steps: [
-      { match: [/kubectl get pods -n observability|kubectl get pods -n tracing/], out: `otel-collector-7d9   Running\njaeger-query-2f1     Running`, hint: "Confirma que el collector de OpenTelemetry y el backend de tracing están desplegados." },
-      { match: [/curl .*checkout|kubectl exec .*curl.*checkout/], out: `trace-id: 8f2a1c — request completed in 4021ms`, hint: "Genera una petición real hacia checkout y captura su trace-id." },
+      { match: [/kubectl get pods -n observability|kubectl get pods -n tracing/], out: `otel-collector-7d9   Running\njaeger-query-2f1     Running`, hint: "Confirm the OpenTelemetry collector and the tracing backend are deployed." },
+      { match: [/curl .*checkout|kubectl exec .*curl.*checkout/], out: `trace-id: 8f2a1c — request completed in 4021ms`, hint: "Generate a real request to checkout and capture its trace-id." },
       { match: [/hubble observe --trace|jaeger.*8f2a1c|curl .*traces\/8f2a1c/], out:
 `spans:
   api-gateway -> orders-svc     12ms
-  orders-svc  -> inventory-svc  3840ms   <-- cuello de botella
-  inventory-svc -> db           95ms`, hint: "Busca el trace por su id y revisa el desglose de spans — un salto concentrará casi toda la latencia.", verify: true }
+  orders-svc  -> inventory-svc  3840ms   <-- bottleneck
+  inventory-svc -> db           95ms`, hint: "Look up the trace by its id and review the span breakdown — one hop will concentrate almost all the latency.", verify: true }
     ],
     solution: `kubectl get pods -n observability
 curl -s -H "traceparent: ..." https://checkout.example.com/pay | tee /tmp/resp.json
 curl -s http://jaeger-query:16686/api/traces/8f2a1c | jq '.data[0].spans[] | {op: .operationName, ms: .duration/1000}'
-# el span orders-svc -> inventory-svc concentra el 95% del tiempo total`
+# the orders-svc -> inventory-svc span accounts for 95% of the total time`
   }
 ];
 
-// ---------- Modo examen ----------
+// ---------- Exam mode ----------
 const EXAM_DOMAIN_WEIGHTS = {
   "Core Infrastructure and CNI": 15,
   "Service Networking and DNS": 25,
@@ -1067,7 +1067,7 @@ function buildSidebar() {
 function updateScore() {
   const total = scenarios.length;
   const done = scenarios.filter(s => progress[s.id] && progress[s.id].completed).length;
-  scoreLabel.textContent = `${done} / ${total} escenarios`;
+  scoreLabel.textContent = `${done} / ${total} scenarios`;
 }
 
 function printLine(text, cls) {
@@ -1107,7 +1107,7 @@ function loadScenario(index) {
   taskCard.innerHTML = `
     <div class="task-meta">
       <span class="domain-badge">${s.domain}</span>
-      <span>~${s.minutes} min sugeridos</span>
+      <span>~${s.minutes} min suggested</span>
     </div>
     <h2>${s.title}</h2>
     <p class="context">${s.context}</p>
@@ -1117,8 +1117,8 @@ function loadScenario(index) {
   renderProgressRow();
 
   terminalBody.innerHTML = "";
-  printLine(`escenario cargado: ${s.title}`, "line-sys");
-  printLine("escribe tu primer comando de diagnóstico. usa 'hint' si te trabas.", "line-sys");
+  printLine(`scenario loaded: ${s.title}`, "line-sys");
+  printLine("type your first diagnostic command. use 'hint' if you get stuck.", "line-sys");
 
   solutionBox.classList.remove("open");
   completeBanner.classList.remove("show");
@@ -1139,7 +1139,7 @@ function renderProgressRow() {
   s.steps.forEach((step, i) => {
     const chip = document.createElement("span");
     chip.className = "step-chip" + (i < currentStep ? " done" : i === currentStep ? " current" : "");
-    chip.textContent = `paso ${i + 1}${step.verify ? " (verificación)" : ""}`;
+    chip.textContent = `step ${i + 1}${step.verify ? " (verification)" : ""}`;
     row.appendChild(chip);
   });
 }
@@ -1157,9 +1157,9 @@ function normalizeBasic(raw) {
   return raw.trim().toLowerCase().replace(/\s+/g, " ");
 }
 
-// Variante adicional (nunca reemplaza a la básica) que tolera alias comunes
-// de kubectl ("k" por "kubectl", "po"/"svc"/"cm" por sus nombres completos)
-// sin arriesgar que un patrón existente deje de matchear.
+// Additional variant (never replaces the basic one) that tolerates common
+// kubectl aliases ("k" for "kubectl", "po"/"svc"/"cm" for their full names)
+// without risking an existing pattern no longer matching.
 function normalizeExpanded(raw) {
   let c = normalizeBasic(raw).replace(/^k(\s|$)/, "kubectl$1");
   return c.split(" ").map(tok => COMMAND_ALIASES[tok] || tok).join(" ");
@@ -1176,13 +1176,13 @@ function tryMatch(input) {
 function handleUtility(raw) {
   const clean = raw.trim().toLowerCase();
   if (clean === "help") {
-    printBlock(`comandos de utilidad:
-  help      - muestra esta ayuda
-  hint      - muestra una pista para el paso actual
-  clear     - limpia la pantalla
-  reset     - reinicia este escenario
-  solution  - muestra la solución completa
-en lo demás, escribe comandos tipo kubectl/cilium/hubble como lo harías en un clúster real.`, "line-sys");
+    printBlock(`utility commands:
+  help      - shows this help
+  hint      - shows a hint for the current step
+  clear     - clears the screen
+  reset     - resets this scenario
+  solution  - shows the full solution
+otherwise, type commands like kubectl/cilium/hubble just like you would on a real cluster.`, "line-sys");
     return true;
   }
   if (clean === "clear") { terminalBody.innerHTML = ""; return true; }
@@ -1194,7 +1194,7 @@ en lo demás, escribe comandos tipo kubectl/cilium/hubble como lo harías en un 
 
 function examBlocked() {
   if (!examMode) return false;
-  printLine("deshabilitado durante el modo examen — así se siente la presión real.", "line-hint");
+  printLine("disabled during exam mode — that's what the real pressure feels like.", "line-hint");
   return true;
 }
 
@@ -1202,10 +1202,10 @@ function showHint() {
   if (examBlocked()) return;
   const s = scenarios[currentIndex];
   if (currentStep >= s.steps.length) {
-    printLine("ya completaste todos los pasos de este escenario.", "line-hint");
+    printLine("you've already completed all the steps in this scenario.", "line-hint");
     return;
   }
-  printLine("pista: " + s.steps[currentStep].hint, "line-hint");
+  printLine("hint: " + s.steps[currentStep].hint, "line-hint");
 }
 
 function toggleSolution(forceOpen) {
@@ -1225,7 +1225,7 @@ function markComplete() {
   stopTimer();
   const m = String(Math.floor(timerSeconds / 60)).padStart(2, "0");
   const sec = String(timerSeconds % 60).padStart(2, "0");
-  completeBanner.textContent = `Escenario completo en ${m}:${sec}. Mejor tiempo guardado: ${Math.floor(best/60)}:${String(best%60).padStart(2,"0")}.`;
+  completeBanner.textContent = `Scenario complete in ${m}:${sec}. Best time saved: ${Math.floor(best/60)}:${String(best%60).padStart(2,"0")}.`;
   completeBanner.classList.add("show");
   buildSidebar();
 
@@ -1235,7 +1235,7 @@ function markComplete() {
   }
 }
 
-// ---------- Lógica del modo examen ----------
+// ---------- Exam mode logic ----------
 function shuffleArray(arr) {
   for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -1258,13 +1258,13 @@ function pickExamScenarios() {
 
 function updateExamBadge(finished) {
   if (finished) {
-    examBadge.textContent = "Examen finalizado";
+    examBadge.textContent = "Exam finished";
     examBadge.style.color = "";
     return;
   }
   const m = String(Math.floor(examTimeLeft / 60)).padStart(2, "0");
   const sec = String(examTimeLeft % 60).padStart(2, "0");
-  examBadge.textContent = `Examen: tarea ${examPos + 1}/${examQueue.length} · ${m}:${sec}`;
+  examBadge.textContent = `Exam: task ${examPos + 1}/${examQueue.length} · ${m}:${sec}`;
   examBadge.style.color = examTimeLeft <= 300 ? "var(--danger)" : "";
 }
 
@@ -1285,8 +1285,8 @@ function startExamTimer() {
 function startExamMode() {
   const minutes = EXAM_DURATION_SECONDS / 60;
   const ok = confirm(
-    `Modo examen: ${EXAM_TASK_COUNT} tareas aleatorias respetando el peso de cada dominio, ` +
-    `${minutes} minutos en total, sin pistas ni solución hasta terminar.\n\n¿Empezar?`
+    `Exam mode: ${EXAM_TASK_COUNT} random tasks weighted by each domain's share, ` +
+    `${minutes} minutes total, no hints or solution until you finish.\n\nStart?`
   );
   if (!ok) return;
 
@@ -1295,7 +1295,7 @@ function startExamMode() {
   examPos = 0;
   examResults = [];
   document.body.classList.add("exam-mode");
-  examModeBtn.textContent = "Salir del examen";
+  examModeBtn.textContent = "Exit exam";
   examBadge.style.display = "inline-block";
   examControls.style.display = "none";
   startExamTimer();
@@ -1304,14 +1304,14 @@ function startExamMode() {
 
 function stopExamMode(silent) {
   if (!silent && examMode) {
-    const ok = confirm("¿Salir del modo examen? Perderás el progreso de esta sesión.");
+    const ok = confirm("Exit exam mode? You'll lose this session's progress.");
     if (!ok) return;
   }
   examMode = false;
   clearInterval(examTimerHandle);
   examTimerHandle = null;
   document.body.classList.remove("exam-mode");
-  examModeBtn.textContent = "Modo examen";
+  examModeBtn.textContent = "Exam mode";
   examBadge.style.display = "none";
   examControls.style.display = "none";
   examControls.innerHTML = "";
@@ -1324,14 +1324,14 @@ function showExamControls() {
   const btn = document.createElement("button");
   btn.className = "primary";
   if (examPos + 1 < examQueue.length) {
-    btn.textContent = "Siguiente tarea →";
+    btn.textContent = "Next task →";
     btn.addEventListener("click", () => {
       examPos++;
       updateExamBadge();
       loadScenario(examQueue[examPos]);
     });
   } else {
-    btn.textContent = "Ver resultados del examen";
+    btn.textContent = "View exam results";
     btn.addEventListener("click", () => finishExam(false));
   }
   examControls.appendChild(btn);
@@ -1352,8 +1352,8 @@ function finishExam(timeUp) {
   examResults.forEach(r => { byDomain[r.domain].done++; });
 
   const lines = [];
-  lines.push((timeUp ? "⏱ Se acabó el tiempo. " : "✓ Examen terminado. ") +
-    `Completaste ${completedCount}/${totalTasks} tareas.`);
+  lines.push((timeUp ? "⏱ Time's up. " : "✓ Exam finished. ") +
+    `You completed ${completedCount}/${totalTasks} tasks.`);
   Object.entries(byDomain).forEach(([d, v]) => lines.push(`  ${d}: ${v.done}/${v.total}`));
 
   examControls.style.display = "flex";
@@ -1362,7 +1362,7 @@ function finishExam(timeUp) {
   pre.textContent = lines.join("\n");
   examControls.appendChild(pre);
   const btn = document.createElement("button");
-  btn.textContent = "Volver a práctica libre";
+  btn.textContent = "Back to free practice";
   btn.addEventListener("click", () => stopExamMode(true));
   examControls.appendChild(btn);
 }
@@ -1377,7 +1377,7 @@ function submitCommand() {
 
   const s = scenarios[currentIndex];
   if (currentStep >= s.steps.length) {
-    printLine("este escenario ya está resuelto. escribe 'reset' para intentarlo de nuevo o elige otro escenario.", "line-sys");
+    printLine("this scenario is already solved. type 'reset' to try again or pick another scenario.", "line-sys");
     return;
   }
 
@@ -1387,13 +1387,13 @@ function submitCommand() {
     currentStep++;
     renderProgressRow();
     if (currentStep >= s.steps.length) {
-      printLine("✓ paso verificado — escenario resuelto.", "line-ok");
+      printLine("✓ step verified — scenario solved.", "line-ok");
       markComplete();
     } else {
-      printLine("✓ paso correcto — continúa con el siguiente.", "line-ok");
+      printLine("✓ correct step — continue to the next one.", "line-ok");
     }
   } else {
-    printLine("sin efecto observable en el clúster simulado con ese comando. escribe 'hint' si necesitas ayuda.", "line-err");
+    printLine("no observable effect in the simulated cluster with that command. type 'hint' if you need help.", "line-err");
   }
 }
 

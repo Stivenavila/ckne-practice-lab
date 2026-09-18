@@ -3,7 +3,7 @@ set -euo pipefail
 NS=svc-lab5
 kubectl create namespace "$NS" --dry-run=client -o yaml | kubectl apply -f -
 
-cat <<EOF | kubectl apply -f -
+cat <<YAML | kubectl apply -f -
 apiVersion: apps/v1
 kind: Deployment
 metadata: {name: checkout, namespace: $NS}
@@ -35,7 +35,7 @@ spec:
   - name: http
     protocol: HTTP
     port: 80
-EOF
+YAML
 
 kubectl -n "$NS" wait --for=condition=Ready pod -l app=checkout --timeout=90s
-echo "Namespace: $NS listo. Falta crear el HTTPRoute que enrute al Gateway."
+echo "Namespace: $NS ready. You still need to create the HTTPRoute pointing at the Gateway."

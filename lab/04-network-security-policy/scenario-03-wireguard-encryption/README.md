@@ -1,29 +1,30 @@
-# Escenario: encriptación transparente entre nodos (WireGuard)
+# Scenario: transparent encryption between nodes (WireGuard)
 
-## Contexto
-Un auditor reporta que el tráfico entre nodos viaja en texto plano. Seguridad exige
-cifrado en tránsito a nivel de red, sin tocar cada aplicación individualmente.
+## Context
+An auditor reports that traffic between nodes travels in plaintext. Security
+requires encryption in transit at the network level, without touching each
+application individually.
 
-## Objetivo
-1. Confirma el problema con `tcpdump` en el toolbox (`hostNetwork`) capturando
-   tráfico entre nodos, viendo el payload legible.
-2. Activa la encriptación transparente de Cilium (WireGuard).
-3. Confirma que el mismo tráfico ya no es legible en claro.
+## Objective
+1. Confirm the problem with `tcpdump` on the toolbox (`hostNetwork`),
+   capturing traffic between nodes and seeing the readable payload.
+2. Enable Cilium's transparent encryption (WireGuard).
+3. Confirm that the same traffic is no longer readable in plaintext.
 
-## Empezar
+## Getting started
 ```bash
 ./setup.sh
-# Genera tráfico entre pods de distintos nodos y captúralo:
+# Generate traffic between pods on different nodes and capture it:
 kubectl exec toolbox-hostnet -- tcpdump -i any -A -c 20 'port 8080' &
 kubectl exec deploy/client -- curl -s server.wg-lab:8080
 ```
 
-## Verificar
+## Verify
 ```bash
 ./verify.sh
 ```
 
-## Limpieza
+## Cleanup
 ```bash
 kubectl delete ns wg-lab
 helm upgrade cilium cilium/cilium --namespace kube-system --reuse-values \

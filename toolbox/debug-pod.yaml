@@ -5,8 +5,8 @@ metadata:
   labels:
     app: toolbox
 spec:
-  # hostNetwork/privileged habilitados para poder inspeccionar iptables, rutas
-  # y namespaces de red del nodo tal como pide el temario de Core Infra/CNI.
+  # hostNetwork/privileged enabled to be able to inspect iptables, routes
+  # and node network namespaces as the Core Infra/CNI domain expects.
   hostNetwork: false
   containers:
     - name: toolbox
@@ -24,8 +24,8 @@ metadata:
   labels:
     app: toolbox-hostnet
 spec:
-  # Variante con red del nodo: útil para depurar iptables/rutas/tcpdump a nivel de nodo
-  # (equivalente a lo que harías con un DaemonSet privilegiado en el examen real).
+  # Node-network variant: useful for debugging iptables/routes/tcpdump at the
+  # node level (equivalent to what you'd do with a privileged DaemonSet on the real exam).
   hostNetwork: true
   containers:
     - name: toolbox

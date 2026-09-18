@@ -9,7 +9,7 @@ WORKER2=$(kubectl get nodes -o jsonpath='{.items[?(@.metadata.labels.kubernetes\
 [ -z "$WORKER1" ] && WORKER1="ckne-worker"
 [ -z "$WORKER2" ] && WORKER2="ckne-worker2"
 
-cat <<EOF | kubectl apply -f -
+cat <<YAML | kubectl apply -f -
 apiVersion: apps/v1
 kind: Deployment
 metadata: {name: web-a, namespace: $NS}
@@ -39,18 +39,18 @@ spec:
       - name: web-b
         image: nicolaka/netshoot
         command: ["sleep", "infinity"]
-EOF
+YAML
 
-echo "Esperando a que los pods estén Running..."
+echo "Waiting for pods to be Running..."
 kubectl -n "$NS" wait --for=condition=Ready pod -l app=web-a --timeout=90s
 kubectl -n "$NS" wait --for=condition=Ready pod -l app=web-b --timeout=90s
 
-# --- Rompemos algo real a nivel de nodo (docker exec al namespace de red del nodo) ---
+# --- Break something real at the node level (docker exec into the node's network namespace) ---
 POD_CIDR_WORKER1=$(kubectl get node "$WORKER1" -o jsonpath='{.spec.podCIDR}')
 echo "$POD_CIDR_WORKER1" > /tmp/ckne-broken-route.txt
 
-echo "Eliminando en $WORKER2 la ruta hacia $POD_CIDR_WORKER1 (simulando el error humano)..."
+echo "Removing the route to $POD_CIDR_WORKER1 on $WORKER2 (simulating human error)..."
 docker exec "$WORKER2" sh -c "ip route del $POD_CIDR_WORKER1 2>/dev/null || true"
 
-echo "Listo. web-b (en $WORKER2) ya NO puede alcanzar pods en $WORKER1 ($POD_CIDR_WORKER1)."
+echo "Done. web-b (on $WORKER2) can NO LONGER reach pods on $WORKER1 ($POD_CIDR_WORKER1)."
 echo "Namespace: $NS"

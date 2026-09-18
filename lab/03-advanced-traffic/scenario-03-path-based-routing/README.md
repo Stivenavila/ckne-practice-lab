@@ -1,28 +1,28 @@
-# Escenario: enrutamiento por path con Gateway API
+# Scenario: path-based routing with Gateway API
 
-**Namespace:** `traffic-lab3` (requiere Gateway API habilitada, ver escenario
+**Namespace:** `traffic-lab3` (requires Gateway API enabled, see
 02-service-networking-dns/scenario-05).
 
-## Contexto
-Dos equipos comparten un mismo dominio/Gateway público: `/orders` debe ir a
-`orders-svc` y `/inventory` a `inventory-svc`.
+## Context
+Two teams share the same public domain/Gateway: `/orders` must go to
+`orders-svc` and `/inventory` to `inventory-svc`.
 
-## Objetivo
-Crea un único `HTTPRoute` con dos reglas de `matches.path`, cada una apuntando al
-backend correcto.
+## Objective
+Create a single `HTTPRoute` with two `matches.path` rules, each pointing at
+the right backend.
 
-## Empezar
+## Getting started
 ```bash
 ./setup.sh
 kubectl -n traffic-lab3 get gateway
 ```
 
-## Verificar
+## Verify
 ```bash
 ./verify.sh
 ```
 
-## Limpieza
+## Cleanup
 ```bash
 kubectl delete ns traffic-lab3
 ```

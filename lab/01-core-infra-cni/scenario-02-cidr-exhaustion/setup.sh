@@ -6,11 +6,11 @@ kubectl create namespace "$NS" --dry-run=client -o yaml | kubectl apply -f -
 WORKER2=$(kubectl get nodes -o name | grep worker2 | sed 's#node/##') || true
 [ -z "${WORKER2:-}" ] && WORKER2="ckne-worker2"
 
-# Forzamos que todo caiga en un solo nodo pidiendo mucha CPU por réplica,
-# de forma que el nodo se quede sin capacidad asignable (Pending real, causa real).
+# Force everything onto a single node by requesting lots of CPU per replica,
+# so the node runs out of allocatable capacity (a real Pending, a real cause).
 ALLOCATABLE_CPU=$(kubectl get node "$WORKER2" -o jsonpath='{.status.allocatable.cpu}')
 
-cat <<EOF | kubectl apply -f -
+cat <<YAML | kubectl apply -f -
 apiVersion: apps/v1
 kind: Deployment
 metadata: {name: web, namespace: $NS}
@@ -27,7 +27,7 @@ spec:
         resources:
           requests:
             cpu: "300m"
-EOF
+YAML
 
-echo "Namespace: $NS — deployment 'web' escalado a 20 réplicas forzadas en $WORKER2"
-echo "El nodo tiene $ALLOCATABLE_CPU CPU asignable: varias réplicas quedarán Pending."
+echo "Namespace: $NS — deployment 'web' scaled to 20 replicas forced onto $WORKER2"
+echo "The node has $ALLOCATABLE_CPU allocatable CPU: several replicas will stay Pending."

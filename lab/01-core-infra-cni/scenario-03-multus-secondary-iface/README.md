@@ -1,40 +1,42 @@
-# Escenario: pod con segunda interfaz de red (Multus)
+# Scenario: pod with a second network interface (Multus)
 
 **Namespace:** `net-lab3`
 
-## Contexto
-Una carga de captura de datos necesita una interfaz secundaria además de `eth0`
-(la que gestiona Cilium).
+## Context
+A data capture workload needs a secondary interface in addition to `eth0`
+(the one Cilium manages).
 
-## Objetivo
-1. Instala Multus CNI como meta-plugin.
-2. Crea una `NetworkAttachmentDefinition` de tipo `bridge` (más estable en Docker/kind
-   que `macvlan`, que suele fallar por restricciones del bridge de Docker).
-3. Crea un pod que use esa NAD vía la anotación `k8s.v1.cni.cncf.io/networks` y
-   confirma con `ip addr` que tiene dos interfaces.
+## Objective
+1. Install Multus CNI as a meta-plugin.
+2. Create a `NetworkAttachmentDefinition` of type `bridge` (more stable in
+   Docker/kind than `macvlan`, which tends to fail due to Docker bridge
+   restrictions).
+3. Create a pod that uses that NAD via the
+   `k8s.v1.cni.cncf.io/networks` annotation and confirm with `ip addr` that it
+   has two interfaces.
 
-## Cómo empezar
+## Getting started
 
 ```bash
 ./setup.sh
 ```
 
-El script instala Multus (manifiesto oficial) y deja el namespace listo. El resto
-(crear la NAD y el pod) lo haces tú — son los dos recursos que se evalúan en el
-examen real.
+The script installs Multus (official manifest) and gets the namespace ready.
+The rest (creating the NAD and the pod) is on you — those are the two
+resources the real exam actually evaluates.
 
-## Pistas
+## Hints
 ```bash
 kubectl get network-attachment-definitions -n net-lab3
 kubectl -n net-lab3 exec <pod> -- ip addr
 ```
 
-## Verificar
+## Verify
 ```bash
 ./verify.sh
 ```
 
-## Limpieza
+## Cleanup
 ```bash
 kubectl delete ns net-lab3
 kubectl delete -f https://raw.githubusercontent.com/k8snetworkplumbingwg/multus-cni/master/deployments/multus-daemonset.yml --ignore-not-found

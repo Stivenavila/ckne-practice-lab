@@ -4,7 +4,7 @@ NS=obs-lab2
 kubectl create namespace "$NS" --dry-run=client -o yaml | kubectl apply -f -
 kubectl label namespace "$NS" name="$NS" --overwrite
 
-cat <<EOF | kubectl apply -f -
+cat <<YAML | kubectl apply -f -
 apiVersion: apps/v1
 kind: Deployment
 metadata: {name: inventory, namespace: $NS}
@@ -38,7 +38,7 @@ spec:
   policyTypes: [Ingress]
   ingress:
   - from: [{podSelector: {matchLabels: {app: nobody}}}]
-EOF
+YAML
 
-echo "Namespace: $NS listo. 'noisy-client' genera tráfico bloqueado continuamente hacia inventory-svc."
-echo "Espera ~30s para que se acumulen drops en las métricas de Hubble."
+echo "Namespace: $NS ready. 'noisy-client' keeps generating blocked traffic towards inventory-svc."
+echo "Wait ~30s for drops to accumulate in Hubble's metrics."

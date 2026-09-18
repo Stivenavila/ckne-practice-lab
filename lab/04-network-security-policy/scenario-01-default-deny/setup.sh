@@ -6,7 +6,7 @@ for NS in payments api-gateway other-ns; do
   kubectl label namespace "$NS" name="$NS" --overwrite
 done
 
-cat <<EOF | kubectl apply -f -
+cat <<YAML | kubectl apply -f -
 apiVersion: apps/v1
 kind: Deployment
 metadata: {name: payments, namespace: payments}
@@ -43,10 +43,10 @@ spec:
   template:
     metadata: {labels: {app: gateway-client}}
     spec: {containers: [{name: gateway-client, image: nicolaka/netshoot, command: ["sleep","infinity"]}]}
-EOF
+YAML
 
 kubectl -n payments wait --for=condition=Ready pod -l app=payments --timeout=90s
 kubectl -n other-ns wait --for=condition=Ready pod -l app=attacker --timeout=90s
 kubectl -n api-gateway wait --for=condition=Ready pod -l app=gateway-client --timeout=90s
 
-echo "Namespaces listos: payments, api-gateway, other-ns. payments no tiene ninguna NetworkPolicy."
+echo "Namespaces ready: payments, api-gateway, other-ns. payments has no NetworkPolicy at all."

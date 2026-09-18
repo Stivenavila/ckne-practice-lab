@@ -4,8 +4,8 @@ CILIUM_POD=$(kubectl -n kube-system get pods -l k8s-app=cilium -o jsonpath='{.it
 STATUS=$(kubectl -n kube-system exec "$CILIUM_POD" -c cilium-agent -- cilium status 2>/dev/null | grep -i "Encryption" || true)
 echo "$STATUS"
 if echo "$STATUS" | grep -qi "wireguard"; then
-  echo "OK: encriptación WireGuard activa."
+  echo "OK: WireGuard encryption is active."
 else
-  echo "La encriptación WireGuard todavía no está activa."
+  echo "WireGuard encryption still isn't active."
   exit 1
 fi

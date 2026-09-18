@@ -1,28 +1,28 @@
-# Escenario: Service sin endpoints
+# Scenario: Service with no endpoints
 
 **Namespace:** `svc-lab1`
 
-## Contexto
-`checkout-svc` no enruta tráfico a ningún pod aunque el Deployment tiene réplicas
-`Running`.
+## Context
+`checkout-svc` isn't routing traffic to any pod even though the Deployment has
+`Running` replicas.
 
-## Objetivo
-Encuentra por qué el Service no tiene endpoints y corrige el selector (no el label
-del pod — en el examen real casi siempre el fix correcto es el Service, no forzar
-el pod a otro label si ese label ya lo usan otros recursos).
+## Objective
+Find out why the Service has no endpoints and fix the selector (not the pod's
+label — on the real exam the correct fix is almost always the Service, not
+forcing the pod onto another label that other resources already rely on).
 
-## Empezar
+## Getting started
 ```bash
 ./setup.sh
 kubectl -n svc-lab1 get endpointslices
 ```
 
-## Verificar
+## Verify
 ```bash
 ./verify.sh
 ```
 
-## Limpieza
+## Cleanup
 ```bash
 kubectl delete ns svc-lab1
 ```

@@ -1,28 +1,28 @@
-# Escenario: pods Running pero fuera del balanceo
+# Scenario: Running pods but out of the load balancing pool
 
 **Namespace:** `svc-lab4`
 
-## Contexto
-`orders-svc` tiene 4 réplicas `Running` pero **ninguna** aparece como endpoint listo
-para recibir tráfico.
+## Context
+`orders-svc` has 4 `Running` replicas but **none** show up as a ready
+endpoint to receive traffic.
 
-## Objetivo
-Diagnostica por qué las otras 2 no están `ready` como endpoints y corrige la causa
-raíz (no bajes el `periodSeconds` a 1 como parche cosmético: entiende y ajusta el
-readiness probe correctamente).
+## Objective
+Diagnose why those pods aren't `ready` as endpoints and fix the root cause
+(don't just drop `periodSeconds` to 1 as a cosmetic patch: understand and fix
+the readiness probe properly).
 
-## Empezar
+## Getting started
 ```bash
 ./setup.sh
 kubectl -n svc-lab4 get endpointslices -l kubernetes.io/service-name=orders-svc
 ```
 
-## Verificar
+## Verify
 ```bash
 ./verify.sh
 ```
 
-## Limpieza
+## Cleanup
 ```bash
 kubectl delete ns svc-lab4
 ```

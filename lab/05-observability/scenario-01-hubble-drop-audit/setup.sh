@@ -4,7 +4,7 @@ NS=obs-lab1
 kubectl create namespace "$NS" --dry-run=client -o yaml | kubectl apply -f -
 kubectl label namespace "$NS" name="$NS" --overwrite
 
-cat <<EOF | kubectl apply -f -
+cat <<YAML | kubectl apply -f -
 apiVersion: apps/v1
 kind: Deployment
 metadata: {name: inventory, namespace: $NS}
@@ -39,10 +39,10 @@ spec:
   ingress:
   - from:
     - podSelector: {matchLabels: {app: nonexistent-caller}}
-EOF
+YAML
 
 kubectl -n "$NS" wait --for=condition=Ready pod -l app=inventory --timeout=90s
 kubectl -n "$NS" wait --for=condition=Ready pod -l app=web-orders --timeout=90s
 
-echo "Namespace: $NS listo."
-echo "Asegúrate de tener Hubble relay corriendo: cilium hubble port-forward &"
+echo "Namespace: $NS ready."
+echo "Make sure Hubble relay is running: cilium hubble port-forward &"

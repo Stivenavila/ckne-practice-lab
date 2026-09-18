@@ -1,31 +1,32 @@
-# Escenario: aislar un namespace con default-deny
+# Scenario: isolating a namespace with default-deny
 
 **Namespace:** `payments`
 
-## Contexto
-`payments` no tiene ninguna NetworkPolicy: cualquier pod del clúster puede
-alcanzarlo. Seguridad exige bloquear todo por defecto y permitir solo el tráfico
-que venga del namespace `api-gateway`.
+## Context
+`payments` has no NetworkPolicy at all: any pod in the cluster can reach it.
+Security wants all traffic blocked by default, with an explicit allow only for
+traffic coming from `api-gateway`.
 
-## Objetivo
-1. Crea una NetworkPolicy default-deny de ingress en `payments`.
-2. Crea una segunda policy que permita explícitamente el tráfico desde `api-gateway`.
-3. Verifica ambos casos: bloqueado desde otros namespaces, permitido desde
+## Objective
+1. Create a default-deny ingress NetworkPolicy in `payments`.
+2. Create a second policy that explicitly allows traffic from the
+   `api-gateway` namespace.
+3. Verify both cases: blocked from other namespaces, allowed from
    `api-gateway`.
 
-## Empezar
+## Getting started
 ```bash
 ./setup.sh
 kubectl -n other-ns exec deploy/attacker -- curl -s -m 3 payments-svc.payments
-# Debe responder (sin política, todo pasa)
+# Should respond (no policy, everything gets through)
 ```
 
-## Verificar
+## Verify
 ```bash
 ./verify.sh
 ```
 
-## Limpieza
+## Cleanup
 ```bash
 kubectl delete ns payments api-gateway other-ns
 ```

@@ -7,8 +7,8 @@ TRACES=$(kubectl run trace-check --rm -i --image=nicolaka/netshoot --restart=Nev
   curl -s "jaeger.${NS}.svc.cluster.local:16686/api/traces?service=frontend&limit=1" 2>/dev/null || true)
 
 if echo "$TRACES" | grep -q '"traceID"'; then
-  echo "OK: Jaeger tiene al menos una traza registrada del servicio 'frontend'."
+  echo "OK: Jaeger has at least one recorded trace from the 'frontend' service."
 else
-  echo "Todavía no hay trazas visibles. Genera tráfico real desde la UI de hotrod (puerto 8080)."
+  echo "No traces visible yet. Generate real traffic from the hotrod UI (port 8080)."
   exit 1
 fi

@@ -3,11 +3,11 @@ set -euo pipefail
 NS=sec-lab4
 PUBLIC=$(kubectl -n "$NS" exec deploy/client -- curl -s -o /dev/null -w '%{http_code}' api-svc/public)
 ADMIN=$(kubectl -n "$NS" exec deploy/client -- curl -s -o /dev/null -w '%{http_code}' api-svc/admin)
-echo "GET /public -> $PUBLIC (esperado 200)"
-echo "GET /admin  -> $ADMIN (esperado 403)"
+echo "GET /public -> $PUBLIC (expected 200)"
+echo "GET /admin  -> $ADMIN (expected 403)"
 if [ "$PUBLIC" = "200" ] && [ "$ADMIN" = "403" ]; then
-  echo "OK: la política L7 filtra correctamente por path."
+  echo "OK: the L7 policy filters correctly by path."
 else
-  echo "La política todavía no filtra como se espera."
+  echo "The policy still isn't filtering as expected."
   exit 1
 fi

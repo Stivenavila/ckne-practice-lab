@@ -1,29 +1,29 @@
-# Escenario: egress restringido por dominio (toFQDNs)
+# Scenario: egress restricted by domain (toFQDNs)
 
 **Namespace:** `sec-lab5`
 
-## Contexto
-Un pod de `sec-lab5` debe poder llamar únicamente a `raw.githubusercontent.com`
-hacia afuera del clúster; cualquier otro destino externo debe bloquearse.
+## Context
+A pod in `sec-lab5` must only be able to call `raw.githubusercontent.com`
+outside the cluster; any other external destination must be blocked.
 
-## Objetivo
-Crea una `CiliumNetworkPolicy` de egress basada en `toFQDNs` que permita solo ese
-dominio y bloquee el resto (ej. `example.com`).
+## Objective
+Create a `CiliumNetworkPolicy` egress rule based on `toFQDNs` that allows only
+that domain and blocks everything else (e.g. `example.com`).
 
-## Empezar
+## Getting started
 ```bash
 ./setup.sh
 kubectl -n sec-lab5 exec deploy/client -- curl -s -o /dev/null -w '%{http_code}\n' https://raw.githubusercontent.com
 kubectl -n sec-lab5 exec deploy/client -- curl -s -o /dev/null -w '%{http_code}\n' -m 5 https://example.com
-# hoy ambos responden (nada está restringido aún)
+# today both respond (nothing is restricted yet)
 ```
 
-## Verificar
+## Verify
 ```bash
 ./verify.sh
 ```
 
-## Limpieza
+## Cleanup
 ```bash
 kubectl delete ns sec-lab5
 ```

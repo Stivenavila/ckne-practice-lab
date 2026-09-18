@@ -1,9 +1,9 @@
-# Escenario: exponer un Service con Gateway API
+# Scenario: exposing a Service with Gateway API
 
 **Namespace:** `svc-lab5`
 
-## Requisito previo (una sola vez por clúster)
-Cilium debe tener la Gateway API habilitada:
+## Prerequisite (one time per cluster)
+Cilium needs Gateway API enabled:
 
 ```bash
 helm upgrade cilium cilium/cilium --namespace kube-system --reuse-values \
@@ -12,27 +12,27 @@ kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/downloa
 kubectl -n kube-system rollout restart deployment/cilium-operator
 ```
 
-## Contexto
-El equipo de checkout necesita exponer `checkout-svc` a través de un Gateway
-compartido, en vez de crear un LoadBalancer propio.
+## Context
+The checkout team needs to expose `checkout-svc` through a shared Gateway,
+instead of creating their own LoadBalancer.
 
-## Objetivo
-1. Crea un `Gateway` (o usa el que despliega `setup.sh`).
-2. Crea un `HTTPRoute` que enrute el tráfico del Gateway hacia `checkout-svc`.
-3. Confirma con `curl` a través de la IP del Gateway que responde.
+## Objective
+1. Create a `Gateway` (or use the one `setup.sh` deploys).
+2. Create an `HTTPRoute` that routes traffic from the Gateway to `checkout-svc`.
+3. Confirm with `curl` through the Gateway's IP that it responds.
 
-## Empezar
+## Getting started
 ```bash
 ./setup.sh
 kubectl -n svc-lab5 get gateway
 ```
 
-## Verificar
+## Verify
 ```bash
 ./verify.sh
 ```
 
-## Limpieza
+## Cleanup
 ```bash
 kubectl delete ns svc-lab5
 ```

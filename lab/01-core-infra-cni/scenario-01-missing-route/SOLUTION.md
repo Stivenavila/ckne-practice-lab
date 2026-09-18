@@ -1,4 +1,4 @@
-# Solución de referencia
+# Reference solution
 
 ```bash
 NS=net-lab1
@@ -6,28 +6,28 @@ kubectl -n $NS get pods -o wide
 IP_A=$(kubectl -n $NS get pod -l app=web-a -o jsonpath='{.items[0].status.podIP}')
 IP_B=$(kubectl -n $NS get pod -l app=web-b -o jsonpath='{.items[0].status.podIP}')
 
-# El ping falla:
+# The ping fails:
 kubectl -n $NS exec deploy/web-a -- ping -c 2 $IP_B
 
-# Diagnóstico: entra al nodo que hospeda a web-b y revisa su tabla de rutas
+# Diagnosis: enter the node hosting web-b and check its routing table
 docker exec ckne-worker2 ip route
-# Falta la ruta hacia el podCIDR del otro worker (ej. 10.244.1.0/24 vía la IP del CNI)
+# Missing route to the other worker's podCIDR (e.g. 10.244.1.0/24 via the CNI gateway)
 
-# Referencia: cuál es el podCIDR "roto"
+# Reference: which podCIDR is "broken"
 kubectl get node ckne-worker -o jsonpath='{.spec.podCIDR}'
 
-# Fix: restaurar la ruta (ajusta el "via" al gateway real que reporte "ip route" en el nodo bueno)
-docker exec ckne-worker ip route   # copia el patrón de ruta válido de este nodo
-docker exec ckne-worker2 ip route add <PODCIDR-WORKER1> via <GATEWAY-CNI-EN-WORKER2>
+# Fix: restore the route (adjust the "via" to the real gateway that "ip route" reports on the good node)
+docker exec ckne-worker ip route   # copy the valid route pattern from this node
+docker exec ckne-worker2 ip route add <WORKER1-PODCIDR> via <CNI-GATEWAY-ON-WORKER2>
 
-# Verifica
+# Verify
 kubectl -n $NS exec deploy/web-a -- ping -c 2 $IP_B
 ```
 
-**Nota de examen:** en un clúster real (no kind), esta ruta normalmente la gestiona
-el propio CNI (Cilium programa las rutas vía BPF/eBPF o vía las tablas de rutas del
-kernel dependiendo del modo: `tunnel` vxlan/geneve vs `native-routing`). Si ves este
-síntoma en producción, antes de tocar rutas a mano revisa:
+**Exam note:** on a real cluster (not kind), this route is normally managed by
+the CNI itself (Cilium programs routes via eBPF or via kernel routing tables
+depending on the mode: `tunnel` vxlan/geneve vs `native-routing`). If you see
+this symptom in production, before touching routes by hand check:
 
 ```bash
 cilium status

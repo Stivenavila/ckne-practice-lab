@@ -3,7 +3,7 @@ set -euo pipefail
 NS=obs-lab3
 kubectl create namespace "$NS" --dry-run=client -o yaml | kubectl apply -f -
 
-cat <<EOF | kubectl apply -f -
+cat <<YAML | kubectl apply -f -
 apiVersion: apps/v1
 kind: Deployment
 metadata: {name: jaeger, namespace: $NS}
@@ -53,8 +53,8 @@ apiVersion: v1
 kind: Service
 metadata: {name: hotrod, namespace: $NS}
 spec: {selector: {app: hotrod}, ports: [{port: 8080, targetPort: 8080}]}
-EOF
+YAML
 
 kubectl -n "$NS" wait --for=condition=Ready pod -l app=jaeger --timeout=120s
 kubectl -n "$NS" wait --for=condition=Ready pod -l app=hotrod --timeout=120s
-echo "Namespace: $NS listo. hotrod -> jaeger conectados."
+echo "Namespace: $NS ready. hotrod -> jaeger connected."

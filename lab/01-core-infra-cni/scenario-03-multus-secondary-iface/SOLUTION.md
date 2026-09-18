@@ -1,9 +1,9 @@
-# Solución de referencia
+# Reference solution
 
 ```bash
 NS=net-lab3
 
-cat <<EOF | kubectl apply -f -
+cat <<YAML | kubectl apply -f -
 apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition
 metadata:
@@ -20,9 +20,9 @@ spec:
       "subnet": "192.168.99.0/24"
     }
   }'
-EOF
+YAML
 
-cat <<EOF | kubectl apply -f -
+cat <<YAML | kubectl apply -f -
 apiVersion: v1
 kind: Pod
 metadata:
@@ -36,15 +36,15 @@ spec:
   - name: capture
     image: nicolaka/netshoot
     command: ["sleep", "infinity"]
-EOF
+YAML
 
 kubectl -n $NS exec capture-pod -- ip addr
-# eth0  -> IP del rango del pod CIDR normal (gestionada por Cilium)
-# net1  -> 192.168.99.x       (segunda interfaz vía Multus/bridge)
+# eth0  -> IP from the normal pod CIDR range (managed by Cilium)
+# net1  -> 192.168.99.x       (second interface via Multus/bridge)
 ```
 
-**Nota:** si usas `macvlan` en vez de `bridge`, en muchos entornos Docker-in-Docker
-(kind) fallará porque el `master` interface del host está detrás del bridge de
-Docker y no permite modo macvlan anidado. En el examen real (nodos bare-metal o VM)
-`macvlan` sí es la opción típica quirúrgica para interfaces dedicadas de alto
-rendimiento.
+**Note:** if you use `macvlan` instead of `bridge`, in many Docker-in-Docker
+(kind) environments it will fail because the host's `master` interface sits
+behind Docker's bridge and doesn't allow nested macvlan mode. On the real exam
+(bare-metal or VM nodes) `macvlan` is indeed the typical surgical choice for
+dedicated high-performance interfaces.

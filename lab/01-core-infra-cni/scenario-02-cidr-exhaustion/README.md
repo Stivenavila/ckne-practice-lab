@@ -1,38 +1,39 @@
-# Escenario: diagnóstico de pods en Pending por capacidad del nodo
+# Scenario: diagnosing Pending pods due to node capacity
 
 **Namespace:** `net-lab2`
 
-## Nota honesta antes de empezar
-El podCIDR por defecto de kind es un `/24` (254 IPs) por nodo — casi imposible de
-agotar en un laptop sin crear cientos de pods reales. Este escenario reproduce el
-**mismo flujo de diagnóstico** (`describe pod` → leer `Events` → `describe node` →
-decidir mitigación) usando un límite de `maxPods`/CPU del nodo como causa real de
-`Pending`, que es la habilidad que el examen evalúa. Al final tienes los comandos
-exactos para el caso real de CIDR agotado (no reproducibles 1:1 en kind).
+## Honest note before you start
+kind's default podCIDR is a `/24` per node (254 IPs) — nearly impossible to
+exhaust on a laptop without spinning up hundreds of real pods. This scenario
+reproduces the **same diagnostic flow** (`describe pod` → read `Events` →
+`describe node` → decide on mitigation) using a node `maxPods`/CPU limit as the
+real cause of `Pending`, which is the skill the exam actually tests. At the end
+you'll find the exact commands for the real CIDR-exhaustion case (not
+reproducible 1:1 in kind).
 
-## Contexto
-Un Deployment escalado agresivamente deja varios pods en `Pending` en un nodo
-específico.
+## Context
+An aggressively scaled Deployment leaves several pods `Pending` on a specific
+node.
 
-## Objetivo
-1. Confirma con `kubectl describe pod` la causa exacta del `Pending`.
-2. Decide y ejecuta la mitigación correcta (¿cordon? ¿reducir réplicas? ¿tolerar en
-   otro nodo?) sin simplemente borrar el Deployment.
+## Objective
+1. Confirm with `kubectl describe pod` the exact cause of the `Pending` state.
+2. Decide on and apply the correct mitigation (cordon? reduce replicas?
+   tolerate on another node?) without simply deleting the Deployment.
 
-## Cómo empezar
+## Getting started
 
 ```bash
 ./setup.sh
 kubectl -n net-lab2 get pods -o wide
 ```
 
-## Verificar
+## Verify
 
 ```bash
 ./verify.sh
 ```
 
-## Limpieza
+## Cleanup
 ```bash
 kubectl delete ns net-lab2
 kubectl uncordon ckne-worker2 2>/dev/null || true

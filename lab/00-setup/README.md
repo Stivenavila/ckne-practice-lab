@@ -1,33 +1,33 @@
-# Setup del laboratorio CKNE
+# CKNE lab setup
 
-Requisitos en tu máquina: `docker`, `kind` **o** `minikube`, `kubectl`, `helm`,
-`cilium` CLI, `hubble` CLI.
+Requirements on your machine: `docker`, `kind` **or** `minikube`, `kubectl`,
+`helm`, `cilium` CLI, `hubble` CLI.
 
-Elige una de las dos rutas para crear el clúster — el resto de la guía (Cilium,
-toolbox, escenarios) es igual para ambas.
+Pick one of the two paths to create the cluster — the rest of the guide
+(Cilium, toolbox, scenarios) is the same for both.
 
-## 1a. Crear el clúster con kind (sin CNI ni kube-proxy)
+## 1a. Create the cluster with kind (no CNI, no kube-proxy)
 
 ```bash
 kind create cluster --name ckne --config kind-config.yaml
 kubectl get nodes
-# Todos en NotReady: es esperado, no hay CNI todavía.
+# All NotReady: expected, no CNI yet.
 ```
 
-## 1b. Alternativa: crear el clúster con minikube
+## 1b. Alternative: create the cluster with minikube
 
 ```bash
 minikube start -p ckne --driver=docker --nodes=3 --cpus=2 --memory=3000mb \
   --network-plugin=cni --cni=false
 kubectl get nodes
-# Todos en NotReady: es esperado, no hay CNI todavía.
+# All NotReady: expected, no CNI yet.
 ```
 
-> minikube instala `kube-proxy` igual aunque pidas `--cni=false` (kind no). Lo
-> quitamos manualmente en el paso 2 para que Cilium haga el reemplazo completo,
-> igual que en kind.
+> minikube installs `kube-proxy` anyway even when you ask for `--cni=false`
+> (kind doesn't). We remove it manually in step 2 so Cilium does the full
+> replacement, just like in kind.
 
-## 2. Instalar Cilium (reemplazando kube-proxy)
+## 2. Install Cilium (replacing kube-proxy)
 
 ```bash
 helm repo add cilium https://helm.cilium.io/
@@ -36,8 +36,8 @@ helm repo update
 helm install cilium cilium/cilium --version 1.16.5 \
   --namespace kube-system \
   --set kubeProxyReplacement=true \
-  --set k8sServiceHost=<IP-o-nombre-del-control-plane> \
-  --set k8sServicePort=<puerto-del-api-server> \
+  --set k8sServiceHost=<control-plane-IP-or-name> \
+  --set k8sServicePort=<api-server-port> \
   --set hubble.relay.enabled=true \
   --set hubble.ui.enabled=true \
   --set hubble.metrics.enabled="{drop,tcp,flow}" \
@@ -45,26 +45,27 @@ helm install cilium cilium/cilium --version 1.16.5 \
   --set encryption.enabled=false
 
 cilium status --wait
-kubectl get nodes   # ahora deben pasar a Ready
+kubectl get nodes   # should now be Ready
 ```
 
-> `k8sServiceHost`/`k8sServicePort` deben apuntar al endpoint real del API server.
-> Comprueba con: `kubectl cluster-info | head -1` (con kind normalmente es
-> `ckne-control-plane:6443`; con minikube, la IP que muestra `kubectl cluster-info`,
-> por ejemplo `192.168.58.2:8443`).
+> `k8sServiceHost`/`k8sServicePort` must point at the real API server endpoint.
+> Check with: `kubectl cluster-info | head -1` (with kind it's usually
+> `ckne-control-plane:6443`; with minikube, the IP shown by
+> `kubectl cluster-info`, e.g. `192.168.58.2:8443`).
 
-**Solo si usaste minikube** (kind no instala kube-proxy cuando pides `--cni=false`,
-así que este paso no aplica ahí):
+**Only if you used minikube** (kind doesn't install kube-proxy when you ask for
+`--cni=false`, so this step doesn't apply there):
 
 ```bash
 kubectl -n kube-system delete daemonset kube-proxy
-kubectl get nodes   # confirma que se mantienen Ready sin kube-proxy
+kubectl get nodes   # confirms they stay Ready without kube-proxy
 ```
 
-## 3. Cargar la imagen toolbox en el clúster
+## 3. Load the toolbox image into the cluster
 
-Antes de usar los escenarios, construye la imagen del toolbox (ver `../../toolbox/`)
-y cárgala en tu clúster — `build.sh` detecta automáticamente si es kind o minikube:
+Before using the scenarios, build the toolbox image (see `../../toolbox/`) and
+load it into your cluster — `build.sh` auto-detects whether it's kind or
+minikube:
 
 ```bash
 cd ../../toolbox
@@ -72,32 +73,33 @@ cd ../../toolbox
 kubectl apply -f debug-pod.yaml
 ```
 
-## 4. Habilitar Hubble UI (usado en el dominio Observability)
+## 4. Enable Hubble UI (used in the Observability domain)
 
 ```bash
 cilium hubble ui
-# abre http://localhost:12000
+# opens http://localhost:12000
 ```
 
-## 5. Cómo usar cada escenario
+## 5. How to use each scenario
 
-Cada carpeta `scenario-XX-*` contiene:
-- `README.md`: contexto + objetivo (igual que en el examen: una tarea, no una pregunta).
-- `setup.sh`: aplica los manifiestos (embebidos como heredoc) y **rompe** algo a propósito.
-- `verify.sh`: valida si ya quedó resuelto (cuando aplica).
-- `SOLUTION.md`: solución de referencia (revísala solo después de intentarlo).
+Each `scenario-XX-*` folder contains:
+- `README.md`: context + objective (just like the exam: a task, not a question).
+- `setup.sh`: applies the manifests (embedded as heredocs) and **breaks**
+  something on purpose.
+- `verify.sh`: checks whether it's already resolved (when applicable).
+- `SOLUTION.md`: reference solution (only check it after you've attempted it).
 
-Flujo recomendado:
+Recommended flow:
 
 ```bash
 cd lab/02-service-networking-dns/scenario-01-broken-selector
-./setup.sh          # deja el entorno roto
-# ... diagnostica y arregla usando kubectl real ...
-./verify.sh          # (si existe) valida que quedó resuelto
+./setup.sh           # leaves the environment broken
+# ... diagnose and fix using real kubectl ...
+./verify.sh           # (if present) confirms it's resolved
 ```
 
-Al terminar cada escenario, limpia con:
+When you finish each scenario, clean up with:
 
 ```bash
-kubectl delete ns <namespace-del-escenario> --ignore-not-found
+kubectl delete ns <scenario-namespace> --ignore-not-found
 ```
