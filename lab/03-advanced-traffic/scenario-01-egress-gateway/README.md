@@ -19,6 +19,10 @@ Configure a `CiliumEgressGatewayPolicy` that forces that traffic out through a
 specific node, and confirm with a real request that the observed source IP
 changes to that node's IP.
 
+## Definition of done
+- [ ] A `CiliumEgressGatewayPolicy` named `egress-lab1` exists
+- [ ] `cilium bpf egress list` (run on any Cilium agent) shows an entry for the `traffic-lab1` namespace
+
 ## Getting started
 ```bash
 ./setup.sh

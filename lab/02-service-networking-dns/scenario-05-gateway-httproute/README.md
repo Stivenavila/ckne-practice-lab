@@ -24,6 +24,10 @@ instead of creating their own LoadBalancer.
 2. Create an `HTTPRoute` that routes traffic from the Gateway to `checkout-svc`.
 3. Confirm with `curl` through the Gateway's IP that it responds.
 
+## Definition of done
+- [ ] `main-gateway` in `svc-lab5` has an IP under `status.addresses`
+- [ ] `curl http://<gateway-ip>` returns `checkout-v1`
+
 ## Getting started
 ```bash
 ./setup.sh

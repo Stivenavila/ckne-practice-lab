@@ -11,6 +11,9 @@ single round-robin A record instead of one record per pod.
 Fix the Service so it's actually *headless* (`clusterIP: None`) and confirm
 that DNS resolves one A record per StatefulSet pod.
 
+## Definition of done
+- [ ] `dig +short db-0.db.svc-lab3.svc.cluster.local` returns an IP (per-pod DNS works, not just the round-robin Service name)
+
 ## Getting started
 ```bash
 ./setup.sh

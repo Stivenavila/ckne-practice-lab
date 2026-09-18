@@ -20,6 +20,10 @@ node.
 2. Decide on and apply the correct mitigation (cordon? reduce replicas?
    tolerate on another node?) without simply deleting the Deployment.
 
+## Definition of done
+- [ ] No pods remain `Pending` in `net-lab2` (reduced replicas / removed the nodeSelector), **or**
+- [ ] The affected node is `cordoned` as an explicit, deliberate mitigation
+
 ## Getting started
 
 ```bash

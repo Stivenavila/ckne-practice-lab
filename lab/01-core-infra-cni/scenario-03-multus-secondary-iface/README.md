@@ -15,6 +15,10 @@ A data capture workload needs a secondary interface in addition to `eth0`
    `k8s.v1.cni.cncf.io/networks` annotation and confirm with `ip addr` that it
    has two interfaces.
 
+## Definition of done
+- [ ] A pod labeled `app=capture` exists in `net-lab3`
+- [ ] `kubectl -n net-lab3 exec <pod> -- ip addr` shows **two** interfaces (`eth0` + a second one, e.g. `net1`)
+
 ## Getting started
 
 ```bash

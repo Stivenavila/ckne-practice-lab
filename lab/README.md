@@ -21,12 +21,17 @@ to run it once per cluster, not per scenario.
 
 ```bash
 cd lab/<domain>/<scenario>
-cat README.md          # context + objective, no spoilers
+cat README.md          # context + objective + "Definition of done", no spoilers
 ./setup.sh               # breaks something real in the cluster
 # ... diagnose and fix with real commands (kubectl, cilium, hubble, tcpdump...) ...
 ./verify.sh              # automatically confirms whether it's resolved
 cat SOLUTION.md           # only if you get stuck, or to compare your approach at the end
 ```
+
+Every scenario's `README.md` has a **"Definition of done"** checklist right
+after the objective — that's the exact, concrete condition `verify.sh` checks.
+If you're not sure whether you're finished, that checklist is the answer;
+`verify.sh` is just the automated version of it.
 
 Recommendations:
 - **Time each scenario** — the exam is timed (~2h total, ~90-120 min split
@@ -160,7 +165,20 @@ Delete its namespace (command at the end of each `README.md`) and run
 `setup.sh` again — every script is idempotent (uses `kubectl apply`, doesn't
 fail if the namespace already exists).
 
-## 5. Full lab cleanup
+## 5. Checking your overall progress
+
+Instead of manually tracking which of the 19 scenarios you've solved, run:
+
+```bash
+./check-progress.sh
+```
+
+It goes through every scenario, checks whether its namespace exists (i.e.
+whether you attempted it), and if so re-runs its `verify.sh` — printing a
+grouped report: `SOLVED` / `not yet — <reason>` / `not started`. Safe to run
+anytime, doesn't change any cluster state.
+
+## 6. Full lab cleanup
 
 ```bash
 kind delete cluster --name ckne

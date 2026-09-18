@@ -22,6 +22,10 @@ lab).
 3. Reference that Secret in the Gateway's HTTPS listener.
 4. Confirm with `openssl s_client`/`curl -k` that the Gateway now serves TLS.
 
+## Definition of done
+- [ ] The `Certificate` `checkout-tls` shows condition `Ready: True`
+- [ ] The Gateway's HTTPS listener references the resulting TLS Secret (`certificateRefs`)
+
 ## Getting started
 ```bash
 ./setup.sh

@@ -10,6 +10,10 @@ outside the cluster; any other external destination must be blocked.
 Create a `CiliumNetworkPolicy` egress rule based on `toFQDNs` that allows only
 that domain and blocks everything else (e.g. `example.com`).
 
+## Definition of done
+- [ ] Requests to `raw.githubusercontent.com` still succeed
+- [ ] Requests to `example.com` (or any other external domain) are blocked/time out
+
 ## Getting started
 ```bash
 ./setup.sh
