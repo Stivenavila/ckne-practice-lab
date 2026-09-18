@@ -11,6 +11,9 @@ application individually.
 2. Enable Cilium's transparent encryption (WireGuard).
 3. Confirm that the same traffic is no longer readable in plaintext.
 
+## Definition of done
+- [ ] `cilium status` reports `Encryption: Wireguard` as active on the agents
+
 ## Getting started
 ```bash
 ./setup.sh

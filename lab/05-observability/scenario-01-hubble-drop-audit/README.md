@@ -10,6 +10,10 @@ suspect a NetworkPolicy, but nobody knows which one.
 Use `hubble observe` to confirm that traffic is being blocked (DROPPED) and
 which policy is responsible — without looking at the policies' YAML first.
 
+## Definition of done
+- [ ] You used `hubble observe --verdict DROPPED` to identify `deny-cross-ns` as the blocking policy (before looking at any policy YAML)
+- [ ] After the fix, `web-orders` can reach `inventory-svc`
+
 ## Getting started
 ```bash
 ./setup.sh

@@ -11,6 +11,9 @@ Diagnose why those pods aren't `ready` as endpoints and fix the root cause
 (don't just drop `periodSeconds` to 1 as a cosmetic patch: understand and fix
 the readiness probe properly).
 
+## Definition of done
+- [ ] `orders-svc` in `svc-lab4` has at least one endpoint with `ready: true`
+
 ## Getting started
 ```bash
 ./setup.sh

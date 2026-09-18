@@ -14,6 +14,10 @@ traffic coming from `api-gateway`.
 3. Verify both cases: blocked from other namespaces, allowed from
    `api-gateway`.
 
+## Definition of done
+- [ ] A pod in `other-ns` **cannot** reach `payments-svc.payments` (blocked/timeout)
+- [ ] A pod in `api-gateway` **can** reach `payments-svc.payments`
+
 ## Getting started
 ```bash
 ./setup.sh

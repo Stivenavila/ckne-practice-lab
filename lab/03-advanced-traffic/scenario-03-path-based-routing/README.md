@@ -11,6 +11,10 @@ Two teams share the same public domain/Gateway: `/orders` must go to
 Create a single `HTTPRoute` with two `matches.path` rules, each pointing at
 the right backend.
 
+## Definition of done
+- [ ] `GET /orders` through the Gateway returns `orders-backend`
+- [ ] `GET /inventory` through the same Gateway returns `inventory-backend`
+
 ## Getting started
 ```bash
 ./setup.sh

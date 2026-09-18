@@ -21,12 +21,17 @@ to run it once per cluster, not per scenario.
 
 ```bash
 cd lab/<domain>/<scenario>
-cat README.md          # context + objective, no spoilers
+cat README.md          # context + objective + "Definition of done", no spoilers
 ./setup.sh               # breaks something real in the cluster
 # ... diagnose and fix with real commands (kubectl, cilium, hubble, tcpdump...) ...
 ./verify.sh              # automatically confirms whether it's resolved
 cat SOLUTION.md           # only if you get stuck, or to compare your approach at the end
 ```
+
+Every scenario's `README.md` has a **"Definition of done"** checklist right
+after the objective — that's the exact, concrete condition `verify.sh` checks.
+If you're not sure whether you're finished, that checklist is the answer;
+`verify.sh` is just the automated version of it.
 
 Recommendations:
 - **Time each scenario** — the exam is timed (~2h total, ~90-120 min split

@@ -14,6 +14,10 @@ like the exam's scenario ("which network hop is concentrating the latency?").
 3. In the Jaeger UI, identify which span is responsible for most of the total
    latency.
 
+## Definition of done
+- [ ] Jaeger has at least one recorded trace for the `frontend` service (i.e. you generated real traffic from the hotrod UI)
+- [ ] You identified which span/hop concentrates most of the total latency
+
 ## Getting started
 ```bash
 ./setup.sh

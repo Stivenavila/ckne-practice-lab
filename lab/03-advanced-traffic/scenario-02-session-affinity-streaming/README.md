@@ -11,6 +11,10 @@ different pods, breaking long-lived (streaming) sessions.
 Confirm the default behavior (round robin across pods) and fix the Service so
 requests from the same client stay pinned to the same pod.
 
+## Definition of done
+- [ ] The `llm-inference` Service has `sessionAffinity: ClientIP`
+- [ ] 5 consecutive requests from the same client all land on the **same** pod
+
 ## Getting started
 ```bash
 ./setup.sh
