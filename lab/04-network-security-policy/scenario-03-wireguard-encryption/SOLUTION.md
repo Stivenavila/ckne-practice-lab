@@ -8,6 +8,7 @@ wait
 
 # 2. Enable WireGuard
 helm upgrade cilium cilium/cilium --namespace kube-system --reuse-values \
+  --set standaloneDnsProxy.enabled=false \
   --set encryption.enabled=true --set encryption.type=wireguard
 kubectl -n kube-system rollout status daemonset/cilium --timeout=180s
 

@@ -7,8 +7,11 @@ Cilium needs Gateway API enabled:
 
 ```bash
 helm upgrade cilium cilium/cilium --namespace kube-system --reuse-values \
+  --set standaloneDnsProxy.enabled=false \
   --set gatewayAPI.enabled=true
-kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.1.0/standard-install.yaml
+kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.1.0/experimental-install.yaml
+# (experimental channel, not standard — Cilium's operator checks for the
+# TLSRoute CRD even if you never use it, and it's only in this channel)
 kubectl -n kube-system rollout restart deployment/cilium-operator
 ```
 

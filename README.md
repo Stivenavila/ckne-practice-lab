@@ -13,7 +13,7 @@ you to practice by solving real problems, not reading theory.
 | Folder / file | What it is | When to use it |
 |---|---|---|
 | [`ckne-practice.html`](ckne-practice.html) | Browser terminal simulator, 20 scenarios with hints and solutions | To drill commands and diagnostic flow without needing a cluster (on the bus, without a powerful laptop, etc.) |
-| [`lab/`](lab/) | 19 **real** scenarios against a `kind`/`minikube` + Cilium cluster | For serious practice that resembles the exam: breaking something real and fixing it |
+| [`lab/`](lab/) | 24 **real** scenarios against a `kind`/`minikube` + Cilium cluster | For serious practice that resembles the exam: breaking something real and fixing it |
 | [`toolbox/`](toolbox/) | Network debugging Docker image (`ckne-toolbox`) | As a debug pod inside the cluster to diagnose any scenario |
 
 Start with the simulator if you want a quick syntax refresher, and use `lab/` for
@@ -75,17 +75,17 @@ scenario. Only open `SOLUTION.md` if you get stuck or to compare your approach
 once you're done — opening it beforehand ruins the practice value.
 
 See **[`lab/README.md`](lab/README.md)** for the detailed flow, the full table of
-the 19 scenarios, and common troubleshooting.
+the 24 scenarios, and common troubleshooting.
 
 ## Domains covered (official exam weight)
 
 | Domain | Weight | Scenarios in `lab/` |
 |---|---|---|
-| Core Infrastructure and CNI | 15% | 3 |
-| Service Networking and DNS | 25% | 5 |
-| Advanced Traffic Management | 20% | 3 |
-| Network Security and Policy | 25% | 5 |
-| Observability | 15% | 3 |
+| Core Infrastructure and CNI | 15% | 4 |
+| Service Networking and DNS | 25% | 6 |
+| Advanced Traffic Management | 20% | 4 |
+| Network Security and Policy | 25% | 6 |
+| Observability | 15% | 4 |
 
 ## Cleanup
 

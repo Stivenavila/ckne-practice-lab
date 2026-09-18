@@ -28,5 +28,6 @@ kubectl exec deploy/client -- curl -s server.wg-lab:8080
 ```bash
 kubectl delete ns wg-lab
 helm upgrade cilium cilium/cilium --namespace kube-system --reuse-values \
+  --set standaloneDnsProxy.enabled=false \
   --set encryption.enabled=false
 ```
