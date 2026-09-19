@@ -42,7 +42,8 @@ helm install cilium cilium/cilium --version 1.16.5 \
   --set hubble.ui.enabled=true \
   --set hubble.metrics.enabled="{drop,tcp,flow}" \
   --set hubble.metrics.enableOpenMetrics=true \
-  --set encryption.enabled=false
+  --set encryption.enabled=false \
+  --set socketLB.hostNamespaceOnly=true
 
 cilium status --wait
 kubectl get nodes   # should now be Ready
@@ -52,6 +53,16 @@ kubectl get nodes   # should now be Ready
 > Check with: `kubectl cluster-info | head -1` (with kind it's usually
 > `ckne-control-plane:6443`; with minikube, the IP shown by
 > `kubectl cluster-info`, e.g. `192.168.58.2:8443`).
+>
+> `socketLB.hostNamespaceOnly=true` matters more than it looks: without it,
+> `sessionAffinity: ClientIP` on a Service silently makes it **unreachable**
+> from other pods (Cilium's default socket-based load balancing doesn't
+> correctly handle session affinity for pod-originated traffic — connections
+> just time out). This restricts socket-LB to host-namespace traffic only,
+> forcing pod traffic through the regular per-packet eBPF path, which does
+> support it. Found and confirmed by actually toggling `sessionAffinity` on
+> a real Service and watching it flip between reachable/unreachable while
+> building `03-advanced-traffic/scenario-02-session-affinity-streaming`.
 
 **Only if you used minikube** (kind doesn't install kube-proxy when you ask for
 `--cni=false`, so this step doesn't apply there):

@@ -19,7 +19,9 @@ spec:
         args: ["-text=orders-ok", "-listen=:5678"]
         ports: [{containerPort: 5678}]
         readinessProbe:
-          httpGet: {path: /healthz, port: 5678}   # BUG: http-echo doesn't serve /healthz -> always 404
+          # BUG: probing the wrong port — nothing listens on 9999, http-echo
+          # only binds :5678 (per -listen above). Connection refused, always.
+          httpGet: {path: /, port: 9999}
           initialDelaySeconds: 2
           periodSeconds: 5
 ---

@@ -1,15 +1,16 @@
-# Scenario: missing route between nodes
+# Scenario: firewall blocking overlay traffic between nodes
 
 **Namespace:** `net-lab1`
 
 ## Context
 Two pods (`web-a` on one worker, `web-b` on another) were deployed. A
-coworker was manually debugging the routing table on node `ckne-worker2` and
-accidentally deleted a route to the other worker's pod subnet.
+coworker was "hardening" host firewall rules on one node last week and
+accidentally blocked traffic on the port Cilium's overlay network uses
+between nodes.
 
 ## Objective
 Diagnose why `web-a` can't ping/curl `web-b` across nodes, and restore
-connectivity **without recreating the cluster or reinstalling Cilium**.
+connectivity — without recreating the cluster or reinstalling Cilium.
 
 ## Definition of done
 - [ ] `kubectl -n net-lab1 exec deploy/web-a -- ping -c 2 <web-b-IP>` succeeds with 0% packet loss
@@ -22,10 +23,11 @@ kubectl -n net-lab1 get pods -o wide
 kubectl -n net-lab1 exec deploy/web-a -- ping -c 2 <web-b-IP>
 ```
 
-Useful tools: `ip route`, `tcpdump`, `docker exec <node> ...` (kind nodes are
-docker containers, you can enter their network namespace directly).
+Useful tools: `docker exec <node> tcpdump -i any udp port 8472` (Cilium's
+default VXLAN port — kind nodes are docker containers, you can enter their
+network namespace directly), `docker exec <node> iptables -L -n -v`.
 
-## Verify it's resolved
+## Verify
 
 ```bash
 ./verify.sh
@@ -35,5 +37,6 @@ docker containers, you can enter their network namespace directly).
 
 ```bash
 kubectl delete ns net-lab1
-docker exec ckne-worker2 sh -c "ip route add \$(cat /tmp/ckne-broken-route.txt) 2>/dev/null || true"
+# if you didn't already remove it as part of solving the scenario:
+docker exec ckne-worker2 iptables -S INPUT | grep 8472
 ```

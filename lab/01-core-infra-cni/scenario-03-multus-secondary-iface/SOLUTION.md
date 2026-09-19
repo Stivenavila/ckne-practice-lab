@@ -43,8 +43,18 @@ kubectl -n $NS exec capture-pod -- ip addr
 # net1  -> 192.168.99.x       (second interface via Multus/bridge)
 ```
 
-**Note:** if you use `macvlan` instead of `bridge`, in many Docker-in-Docker
-(kind) environments it will fail because the host's `master` interface sits
-behind Docker's bridge and doesn't allow nested macvlan mode. On the real exam
-(bare-metal or VM nodes) `macvlan` is indeed the typical surgical choice for
-dedicated high-performance interfaces.
+**Note:** if this doesn't work, the most likely cause is plumbing `setup.sh`
+already handles for you, but worth knowing about for the real exam too:
+Cilium runs with "exclusive CNI" by default and will rename any other CNI's
+config file in `/etc/cni/net.d` to `*.cilium_bak`, silently neutralizing
+Multus. Check with `docker exec <node> ls /etc/cni/net.d/` — if you see
+`00-multus.conf.cilium_bak` but no active `00-multus.conf`, that's it. Fix:
+`helm upgrade cilium cilium/cilium --reuse-values --set cni.exclusive=false`,
+restart the `cilium` DaemonSet, then copy the `.cilium_bak` file to its real
+name on each node.
+
+If you use `macvlan` instead of `bridge` for the NAD, in many
+Docker-in-Docker (kind) environments it will fail because the host's
+`master` interface sits behind Docker's bridge and doesn't allow nested
+macvlan mode. On the real exam (bare-metal or VM nodes) `macvlan` is indeed
+the typical choice for dedicated high-performance interfaces.
