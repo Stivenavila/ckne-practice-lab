@@ -9,21 +9,29 @@ if [ "$W1" != "90" ] || [ "$W2" != "10" ]; then
   echo "Weights aren't set to 90/10 yet."
   exit 1
 fi
-echo "OK: HTTPRoute config is correct (this is the part that's graded)."
 
-# Best-effort live traffic check — informational only, does not affect
-# pass/fail. On kind without a real cloud LoadBalancer, Gateway dataplane
-# connectivity can be unreliable/version-dependent even with L2
-# announcements enabled; see this scenario's README for details.
 GW_IP=$(kubectl -n "$NS" get gateway main-gateway -o jsonpath='{.status.addresses[0].value}' 2>/dev/null || true)
-if [ -n "$GW_IP" ]; then
+if [ -z "$GW_IP" ]; then
+  echo "Gateway has no IP yet."
+  exit 1
+fi
+
+# Retry loop: right after a Cilium/Gateway API config change, Envoy can take
+# a little while to finish reconciling — don't hard-fail on the first try.
+for attempt in 1 2 3; do
   SEEN_V1=0; SEEN_V2=0
-  for i in $(seq 1 10); do
-    R=$(kubectl run canarytest-verify-$i --rm -i --image=nicolaka/netshoot --restart=Never -- curl -s -m 3 "http://$GW_IP" 2>/dev/null || true)
+  for i in $(seq 1 15); do
+    R=$(kubectl run canarytest-verify-$attempt-$i --rm -i --image=nicolaka/netshoot --restart=Never -- curl -s -m 3 "http://$GW_IP" 2>/dev/null || true)
     echo "$R" | grep -q "checkout-v1" && SEEN_V1=1
     echo "$R" | grep -q "checkout-v2" && SEEN_V2=1
   done
-  echo "(informational) live traffic saw v1: $SEEN_V1   v2: $SEEN_V2"
-else
-  echo "(informational) Gateway has no address yet — skipping live traffic check."
-fi
+  if [ "$SEEN_V1" -eq 1 ] && [ "$SEEN_V2" -eq 1 ]; then
+    echo "OK: traffic is actually splitting between both versions (attempt $attempt)."
+    exit 0
+  fi
+  echo "Attempt $attempt: v1 seen=$SEEN_V1 v2 seen=$SEEN_V2 — retrying in 15s..."
+  sleep 15
+done
+
+echo "Only one version (or neither) responded across 3 attempts — check the HTTPRoute backendRefs and Gateway status."
+exit 1

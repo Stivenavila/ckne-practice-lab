@@ -24,16 +24,18 @@ kubectl -n "$NS" wait --for=condition=Ready pod -l app=client --timeout=90s
 NODE=$(kubectl -n "$NS" get pod -l app=client -o jsonpath='{.items[0].spec.nodeName}')
 echo "Client pod scheduled on $NODE."
 
-# Break something real: remove the MASQUERADE rule inside Cilium's own
-# CILIUM_POST_nat chain (this is where Cilium actually puts it — NOT
-# necessarily matching the Node.spec.podCIDR that kubeadm/kind allocated,
-# since Cilium's default cluster-pool IPAM assigns its own range).
-LINE=$(docker exec "$NODE" iptables -t nat -L CILIUM_POST_nat -n --line-numbers 2>/dev/null | awk '/MASQUERADE/{print $1; exit}')
-if [ -z "$LINE" ]; then
-  echo "Couldn't find a MASQUERADE rule in CILIUM_POST_nat on $NODE — is Cilium using BPF masquerading instead of iptables? Check 'cilium status | grep Masquerading'." >&2
+# Break something real: block forwarded HTTPS traffic from this node's pod
+# subnet in the FORWARD chain, simulating an overly broad firewall rule
+# someone added. Using FORWARD (not OUTPUT/POSTROUTING) keeps this
+# independent of whether Cilium's masquerading happens to be iptables-based
+# or BPF-based on this cluster — either way, forwarded pod traffic still
+# passes through FORWARD before any NAT/masquerade decision.
+POD_CIDR=$(kubectl get ciliumnode "$NODE" -o jsonpath='{.spec.ipam.podCIDRs[0]}')
+if [ -z "$POD_CIDR" ]; then
+  echo "Couldn't read CiliumNode.spec.ipam.podCIDRs for $NODE." >&2
   exit 1
 fi
-echo "Removing MASQUERADE rule (line $LINE of CILIUM_POST_nat) on $NODE (simulating the 'cleanup')..."
-docker exec "$NODE" iptables -t nat -D CILIUM_POST_nat "$LINE"
+echo "Blocking forwarded HTTPS traffic from $POD_CIDR on $NODE (simulating an overly broad firewall rule)..."
+docker exec "$NODE" iptables -I FORWARD -s "$POD_CIDR" -p tcp --dport 443 -j DROP
 
-echo "Namespace: $NS ready. Outbound internet traffic from $NODE should now fail."
+echo "Namespace: $NS ready. Outbound HTTPS traffic from pods on $NODE should now fail."

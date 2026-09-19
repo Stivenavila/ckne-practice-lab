@@ -45,12 +45,19 @@ echo "Waiting for pods to be Running..."
 kubectl -n "$NS" wait --for=condition=Ready pod -l app=web-a --timeout=90s
 kubectl -n "$NS" wait --for=condition=Ready pod -l app=web-b --timeout=90s
 
-# --- Break something real at the node level (docker exec into the node's network namespace) ---
-POD_CIDR_WORKER1=$(kubectl get node "$WORKER1" -o jsonpath='{.spec.podCIDR}')
-echo "$POD_CIDR_WORKER1" > /tmp/ckne-broken-route.txt
+# --- Break something real at the node level: block Cilium's VXLAN overlay
+# port (8472/udp) between the two worker nodes, simulating an overly broad
+# firewall rule. This is deliberately NOT "delete an ip route" — with
+# Cilium's default tunnel/vxlan routing mode, cross-node pod traffic is
+# encapsulated and forwarded via eBPF, so host routing-table entries for the
+# remote pod CIDR aren't actually consulted for the forwarding decision.
+# Blocking the real transport (the VXLAN UDP port) is what actually breaks
+# connectivity here.
+WORKER1_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$WORKER1")
+echo "$WORKER1_IP" > /tmp/ckne-blocked-peer.txt
 
-echo "Removing the route to $POD_CIDR_WORKER1 on $WORKER2 (simulating human error)..."
-docker exec "$WORKER2" sh -c "ip route del $POD_CIDR_WORKER1 2>/dev/null || true"
+echo "Blocking VXLAN (udp/8472) from $WORKER1 ($WORKER1_IP) on $WORKER2 (simulating an overly broad firewall rule)..."
+docker exec "$WORKER2" iptables -A INPUT -p udp --dport 8472 -s "$WORKER1_IP" -j DROP
 
-echo "Done. web-b (on $WORKER2) can NO LONGER reach pods on $WORKER1 ($POD_CIDR_WORKER1)."
+echo "Done. web-b (on $WORKER2) can NO LONGER reach pods on $WORKER1."
 echo "Namespace: $NS"
