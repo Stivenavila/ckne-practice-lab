@@ -6,9 +6,19 @@
 ```bash
 helm upgrade cilium cilium/cilium --namespace kube-system --reuse-values \
   --set standaloneDnsProxy.enabled=false \
-  --set egressGateway.enabled=true
+  --set egressGateway.enabled=true \
+  --set bpf.masquerade=true
 kubectl -n kube-system rollout restart daemonset/cilium
+kubectl -n kube-system rollout status daemonset/cilium --timeout=120s
 ```
+
+> **Important:** `bpf.masquerade=true` is not optional here — Cilium's egress
+> gateway feature hard-requires BPF-based masquerading and the agent will
+> **crash-loop on its next restart** (fatal error: "egress gateway requires
+> --enable-ipv4-masquerade=true and --enable-bpf-masquerade=true") if it's
+> left on the default iptables-based masquerading. This can happen at
+> install time or silently sit dormant until any future agent restart (node
+> reboot, upgrade, OOM) — set it now, don't skip it.
 
 ## Context
 An external provider requires IP whitelisting for all outbound traffic from

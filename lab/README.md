@@ -90,10 +90,14 @@ kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/downloa
 kubectl -n kube-system rollout restart deployment/cilium-operator
 
 # Egress Gateway (scenario 11)
+# bpf.masquerade=true is NOT optional — without it the agent crash-loops on
+# its next restart (fatal error requiring --enable-bpf-masquerade=true)
 helm upgrade cilium cilium/cilium --namespace kube-system --reuse-values \
   --set standaloneDnsProxy.enabled=false \
-  --set egressGateway.enabled=true
+  --set egressGateway.enabled=true \
+  --set bpf.masquerade=true
 kubectl -n kube-system rollout restart daemonset/cilium
+kubectl -n kube-system rollout status daemonset/cilium --timeout=120s
 
 # cert-manager (scenario 16)
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/latest/download/cert-manager.yaml
@@ -159,6 +163,41 @@ fixing either cause is usually needed to pick it up.
 **`hubble observe` shows nothing**
 You need the relay running and reachable: `cilium hubble port-forward &` in
 another terminal before using the CLI.
+
+**Cilium agent pods go `CrashLoopBackOff` after any `helm upgrade` + daemonset restart**
+Check `kubectl -n kube-system logs <cilium-pod> -c cilium-agent | tail -30`
+first — a `level=fatal` line tells you exactly which feature flags conflict.
+The one found while building this lab: `egressGateway.enabled=true` (used by
+`scenario-01-egress-gateway`) **hard-requires** `bpf.masquerade=true`. If
+you enable egress gateway without it, the agent starts fine at first and
+only crashes on its *next* restart (reboot, upgrade, OOM) — silently
+grenade-pinned. Always pair `egressGateway.enabled=true` with
+`--set bpf.masquerade=true` in the same or an earlier `helm upgrade`.
+Also worth knowing: a `helm upgrade` that only changes a `ConfigMap`-backed
+value (most `--set` flags) does **not** by itself restart the DaemonSet's
+pods — you must `kubectl -n kube-system rollout restart daemonset/cilium`
+afterward for the new config to actually take effect (and for any latent
+conflict like the one above to actually surface).
+
+**Multus doesn't seem to do anything — pod never gets a second interface**
+Cilium runs with "exclusive CNI" by default and will rename any other CNI's
+config file in `/etc/cni/net.d` to `*.cilium_bak`, silently neutralizing
+Multus. `scenario-03-multus-secondary-iface`'s `setup.sh` handles this
+automatically now (`cni.exclusive=false` + re-activating the renamed config
+file on every node), but if you're doing this outside that scenario: check
+`docker exec <node> ls /etc/cni/net.d/` for a `*.cilium_bak` file with no
+active counterpart.
+
+**A Service with `sessionAffinity: ClientIP` becomes unreachable from other pods**
+Cilium's default socket-based load balancing doesn't correctly enforce
+session affinity for pod-originated traffic — connections just time out the
+moment you set `sessionAffinity: ClientIP`, and go back to working the
+instant you unset it. Fix: install Cilium with
+`--set socketLB.hostNamespaceOnly=true` (already in this lab's `00-setup`
+instructions — if you installed before this was added, `helm upgrade
+--reuse-values --set standaloneDnsProxy.enabled=false --set
+socketLB.hostNamespaceOnly=true` + `kubectl -n kube-system rollout restart
+daemonset/cilium` fixes it on an existing cluster).
 
 **I want to restart a scenario from scratch**
 Delete its namespace (command at the end of each `README.md`) and run

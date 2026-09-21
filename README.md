@@ -86,7 +86,8 @@ helm install cilium cilium/cilium --version 1.16.5 \
   --set hubble.relay.enabled=true \
   --set hubble.ui.enabled=true \
   --set hubble.metrics.enabled="{drop,tcp,flow}" \
-  --set hubble.metrics.enableOpenMetrics=true
+  --set hubble.metrics.enableOpenMetrics=true \
+  --set socketLB.hostNamespaceOnly=true
 
 cilium status --wait
 kubectl get nodes   # should now be Ready
@@ -94,7 +95,9 @@ kubectl get nodes   # should now be Ready
 
 Find `k8sServiceHost`/`k8sServicePort` with `kubectl cluster-info | head -1`
 (kind: usually `ckne-control-plane:6443`; minikube: the IP shown, e.g.
-`192.168.58.2:8443`).
+`192.168.58.2:8443`). `socketLB.hostNamespaceOnly=true` isn't optional —
+without it, `sessionAffinity: ClientIP` on any Service becomes silently
+unreachable from other pods (see `lab/README.md`'s troubleshooting section).
 
 **Only if you used minikube**, kube-proxy gets installed anyway — remove it so
 Cilium does the full replacement:
