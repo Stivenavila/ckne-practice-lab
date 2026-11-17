@@ -1,5 +1,11 @@
 # CKNE Practice Lab
 
+[![CI](https://github.com/Stivenavila/ckne-practice-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/Stivenavila/ckne-practice-lab/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Simulator](https://img.shields.io/badge/Try%20it-online%20simulator-2ea44f)](https://stivenavila.github.io/ckne-practice-lab/)
+![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?logo=kubernetes&logoColor=white)
+![Cilium](https://img.shields.io/badge/Cilium-F8C517?logo=cilium&logoColor=black)
+
 Hands-on study material for the **CKNE (Certified Kubernetes Network Engineer)**
 certification from CNCF/Linux Foundation. The exam is 100% practical (tasks on a
 real cluster, not multiple-choice questions), so this whole repo is designed for
@@ -12,7 +18,7 @@ you to practice by solving real problems, not reading theory.
 
 | Folder / file | What it is | When to use it |
 |---|---|---|
-| [`ckne-practice.html`](ckne-practice.html) | Browser terminal simulator, 20 scenarios with hints and solutions | To drill commands and diagnostic flow without needing a cluster (on the bus, without a powerful laptop, etc.) |
+| [`ckne-practice.html`](ckne-practice.html) ([live demo](https://stivenavila.github.io/ckne-practice-lab/)) | Browser terminal simulator, 20 scenarios with hints and solutions | To drill commands and diagnostic flow without needing a cluster (on the bus, without a powerful laptop, etc.) |
 | [`lab/`](lab/) | 24 **real** scenarios against a `kind`/`minikube` + Cilium cluster | For serious practice that resembles the exam: breaking something real and fixing it |
 | [`toolbox/`](toolbox/) | Network debugging Docker image (`ckne-toolbox`) | As a debug pod inside the cluster to diagnose any scenario |
 | [`console/`](console/) | Local web UI: real terminal + current scenario's instructions side by side, with a "Verify" button | If you'd rather not juggle a separate terminal and README tab — same `lab/` workflow, nicer UI. Localhost-only, no cluster changes on its own |
