@@ -39,8 +39,26 @@ git branch -d feature/task-name
 
 ## Commit messages
 
-Free-form but descriptive, focused on the **why** of the change rather than the
-what — the diff already shows the what.
+Use [Conventional Commits](https://www.conventionalcommits.org/), in English:
+
+```
+<type>: <short summary in the imperative>
+
+<optional body: why the change is needed>
+```
+
+| Type | Use it for |
+|---|---|
+| `feat` | a new scenario, simulator feature or console capability |
+| `fix` | a bug fix |
+| `docs` | documentation only |
+| `refactor` | code changes that don't change behaviour |
+| `ci` | GitHub Actions and automation |
+| `chore` | maintenance, dependencies, configuration |
+
+Focus the summary and body on the **why** — the diff already shows the what.
+Because PRs are squash-merged, the **PR title** becomes the commit message on
+`main`, so give it the same format.
 
 ## Long-lived or shared branches
 
